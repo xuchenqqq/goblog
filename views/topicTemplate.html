@@ -1,0 +1,49 @@
+<div class="row">
+  <div class="col-md-12" role="main">
+    <div class="post-container">
+      <h2 class="post-title"><a href="{{.Url}}" rel="bookmark">{{.Title}}</a></h2>
+      <div class="meta-box">
+        <span class="m-post-date"><i class="icon-calendar"></i> {{.Time}}</span>
+        <span class="comments-link"><a href="{{.Url}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"><i class="icon-comments"></i> 留言:</a>{{.Comment}}</span>
+        </div>
+        <!-- content -->
+        <!-- 放入在文章页内容前面 -->
+        <div class="BlogAnchor">
+          <p>
+            <b id="AnchorContentToggle" title="收起" style="cursor:pointer;">目录[-]</b>
+          </p>
+          <div class="AnchorContent" id="AnchorContent"> </div>
+        </div>
+        <div id="highlight-content"></div>
+        <!-- /content -->
+      <div class="meta-box">
+        <span class="cat-links">
+          <i class="icon-reorder"></i><b>分类:</b>
+           <!-- <a href="http://deepzz.com/cat/default" rel="category tag" target="_self">默认分类</a> -->
+          {{str2html .Category}}
+        </span>
+        <span class="tag-links">
+          <i class="icon-tags"></i><b>标签:</b>
+          <!-- <a href="http://www.soulteary.com/tags/bash" rel="tag" target="_self">bash</a>, 
+          <a href="http://www.soulteary.com/tags/dns" rel="tag" target="_self">DNS</a>, -->
+          {{str2html .Tags}}
+        </span>
+      </div>
+    </div>
+    <!-- 多说评论框 start -->
+    <div class="ds-thread" data-thread-key="{{.ID}}" data-order="desc" data-limit="50" data-title="{{.Title}}" data-url="{{.Url}}"></div>
+    <!-- 多说评论框 end -->
+    <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
+    <script type="text/javascript">
+      var duoshuoQuery = {short_name:"deepzz"};
+      (function() {
+        var ds = document.createElement('script');
+        ds.type = 'text/javascript';ds.async = true;
+        ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+        ds.charset = 'UTF-8';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(ds);
+      })();
+    </script>
+    <!-- 多说公共JS代码 end -->
+  </div>   
+</div>

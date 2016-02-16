@@ -1,0 +1,38 @@
+<div class="row">
+	<div class="col-md-12">
+		<h2 class="page-title page-title"><a href="{{.Url}}" rel="bookmark">{{.Name}}</a></h2>
+		<div class="topicList">
+			{{range .ListTopics}}
+	        <div class="row">
+	          <div class="col-md-12 post-container">
+	            <h3 class="post-title"><a href="{{.Url}}" rel="bookmark">{{.Title}}</a></h3>
+	            <div class="meta-box">
+	              <span class="m-post-date"><i class="fa fa-calendar"></i> {{.Time}}</span>
+	              <span class="comments-link"><a href="{{.Url}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"><i class="fa fa-comments"></i> 留言</a></span>
+	            </div>
+	            <div class="post-content post-expect">
+	              <p>
+	                {{.Preview}}
+	                <a href="{{.Url}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
+	              </p>
+	            </div>
+	            <div class="meta-box">
+	              <span class="cat-links"><i class="fa fa-reorder"></i><b>分类:</b>
+	                {{str2html .Category}}
+	              </span>
+	              <span class="tag-links"><i class="fa fa-reorder"></i><b>标签:</b>
+	                {{str2html .Tags}}
+	              </span>
+	            </div>
+	          </div>
+	        </div>
+	      {{end}}
+		</div>
+	</div>
+	<nav>
+  		<ul class="pager">
+    		<li class="previous {{.ClassOlder}}" id="previous"><a href="{{.UrlOlder}}"><span aria-hidden="true">&larr;</span> Older</a></li>
+    		<li class="next {{.ClassNewer}}" id="next"><a href="{{.UrlNewer}}">Newer <span aria-hidden="true">&rarr;</span></a></li>
+   		</ul>
+	</nav>
+</div>

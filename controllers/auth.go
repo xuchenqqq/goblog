@@ -1,39 +1,44 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/smalltree0/goblog/RS"
+	"github.com/smalltree0/beego_goblog/RS"
+	"github.com/smalltree0/beego_goblog/helper"
+	"github.com/smalltree0/beego_goblog/models"
 )
 
 type AuthController struct {
-	beego.Controller
+	BaseController
 }
 
 func (this *AuthController) Get() {
-	this.TplNames = "login.html"
+	if logout := this.GetString("logout"); logout == "now" {
+		this.DelSession(sessionname)
+	}
+	this.TplName = "login.html"
+	this.Data["Name"] = models.Blogger.BlogName
+	this.Data["Url"] = this.domain
 }
 
 func (this *AuthController) Post() {
-	resp := NewResponse()
+	resp := helper.NewResponse()
 	username := this.GetString("username")
 	password := this.GetString("password")
 
 	if username == "" || password == "" {
 		resp.Status = RS.RS_params_error
-		resp.Tips(WARNING, RS.RS_params_error)
+		resp.Tips(helper.WARNING, RS.RS_params_error)
 		resp.WriteJson(this.Ctx.ResponseWriter)
 		return
 	}
-	// if code := db.UMgr.LoginUser(username, password); code == RS.RS_user_inexistence {
-	// 	resp.Status = code
-	// 	resp.Tips(WARNING, code)
-	// } else if code == RS.RS_password_error {
-	// 	resp.Status = code
-	// 	resp.Tips(WARNING, code)
-	// } else {
-	// 	sess, _ := gloablSessions.SessionStart(w, r)
-	// 	sess.Set(SESSIONNAME, username)
-	// 	resp.Data = "/"
-	// }
+	if code := models.UMgr.LoginUser(username, password); code == RS.RS_user_inexistence {
+		resp.Status = code
+		resp.Tips(helper.WARNING, code)
+	} else if code == RS.RS_password_error {
+		resp.Status = code
+		resp.Tips(helper.WARNING, code)
+	} else {
+		this.SetSession(sessionname, username)
+		resp.Data = "/admin/data"
+	}
 	resp.WriteJson(this.Ctx.ResponseWriter)
 }

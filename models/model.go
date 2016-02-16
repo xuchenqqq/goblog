@@ -1,28 +1,52 @@
-package mgodb
+package models
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+
+	"github.com/smalltree0/beego_goblog/RS"
+	// "github.com/smalltree0/com/log"
 	"github.com/smalltree0/com/monitor"
 )
 
 const (
-	DB      = "goblog" // database数据库
-	C_USER  = "user"   // collections表
-	C_TOPIC = "content"
-	// 初始化管理员账号
-	ADMIN_NAME  = "g"
-	ADMIN_PASS  = "g"
-	ADMIN_EMAIL = "chenqijing2@163.com"
+	DB         = "newblog" // database数据库
+	C_USER     = "user"    // collections表
+	C_TOPIC    = "topic"
+	C_TOPIC_ID = "topic_id" // 文章ID计数
 )
 
-var Deepzz *User
+var Blogger *User
 
 func init() {
 	monitor.RegistExitFunc("flushdata", flushdata)
-	UMgr.RegisterUser(ADMIN_NAME, ADMIN_PASS, ADMIN_EMAIL) // 注册账号
-
-	Deepzz = UMgr.Get("deepzz")
+	// 以下三句保证调用顺序
+	UMgr.loadUsers()
+	Blogger = UMgr.Get("deepzz")
+	if Blogger == nil {
+		path, _ := os.Getwd()
+		f, err := os.Open(path + "/conf/backup/user.json")
+		if err != nil {
+			panic(err)
+		}
+		user := User{}
+		b, _ := ioutil.ReadAll(f)
+		err = json.Unmarshal(b, &user)
+		if err != nil {
+			panic(err)
+		}
+		UMgr.RegisterUser(&user)
+		code := UMgr.UpdateUsers()
+		if code != RS.RS_success {
+			panic("更新用户数据失败。")
+		}
+		Blogger = UMgr.Get("deepzz")
+	}
+	TMgr.loadTopics()
 }
 
 func flushdata() {
 	UMgr.UpdateUsers()
+	TMgr.UpdateTopics()
 }

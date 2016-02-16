@@ -243,6 +243,11 @@ em{
 /*left-bar*/
 .left-bar{
   border-right: 1px solid #eee;
+  width:15%;
+  min-width: 100px;
+  height: auto;
+  float: left;
+  padding: 4px;
 }
 .tq { 
     margin-top: 10px;
@@ -260,6 +265,7 @@ em{
 }
 #nav-category>li > a {
     color: black;
+    padding: 5px 15px;
 }
 li {
   list-style: none;
@@ -274,6 +280,7 @@ li > a {
 }
 a {
     color: #1ca8dd;
+    text-indent: 0;
     text-decoration: none;
 }
 .site-copyright {
@@ -303,12 +310,16 @@ a {
 /*right-content*/
     /*border-bottom: 1px solid #efefef;*/
 .right-content{
-  margin: 10px;
+  /*margin: 10px;*/
+  padding: 5px;
+  width:85%; 
+  height: 100%;
+  float: left;
 }
 /*文章列表*/
 .page-title {
     margin-top: 20px;
-    font-size: 20px;
+    font-size: 30px;
     color: #999;
     margin-bottom: 10px;
     border-bottom: 1px solid #eee;
@@ -320,10 +331,10 @@ a {
 }
 .post-container .post-title {
     margin-bottom: 16px;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 .post-container .meta-box {
-    font-size: 13px;
+    font-size: 11px;
     padding: 4px;
     border-left-color: #b02323;
     line-height: 1;
@@ -375,26 +386,183 @@ b, strong {
     font-size: 1rem;
     outline: none;
 }
-.blogroll a:hover {
+.blogroll a:hover{
   color: black;
   font-size: 17px;
 }
+/*云标签*/
+.tagcloud a:hover{
+  color: black;
+}
+.tagcloud a {
+    color: #757575;
+    text-decoration: none;
+    font-size: 1rem;
+    margin: 1px;
+}
+.tag-link-1{
+  font-size: 8pt!important;
+}
+.tag-link-2{
+  font-size: 10.191304347826pt!important;
+}
+.tag-link-3{
+  font-size: 11.652173913043pt!important;
+}
+.tag-link-4{
+  font-size: 12.752173913043pt!important;
+}
+.tag-link-5{
+  font-size: 13.84347826087pt!important;
+}
+.tag-link-6{
+  font-size: 10.191304347826pt!important;
+}
+.tag-link-7{
+  font-size: 11.652173913043pt!important;
+}
+.tag-link-8{
+  font-size: 12.752173913043pt!important;
+}
+.tag-link-9{
+  font-size: 13.84347826087pt!important;
+}
+.tag-link-10{
+  font-size: 10.191304347826pt!important;
+}
+.tag-link-11{
+  font-size: 11.652173913043pt!important;
+}
+.tag-link-12{
+  font-size: 12.752173913043pt!important;
+}
+.tag-link-13{
+  font-size: 13.84347826087pt!important;
+}
+.tag-link-14{
+  font-size: 10.191304347826pt!important;
+}
+.tag-link-15{
+  font-size: 11.652173913043pt!important;
+}
+.tag-link-16{
+  font-size: 12.752173913043pt!important;
+}
+.tag-link-17{
+  font-size: 13.84347826087pt!important;
+}
+.tag-link-18{
+  font-size: 18.713043478261pt!important;
+}
+.tag-link-19{
+  font-size: 19.052173913043pt!important;
+}
+.tag-link-20{
+  font-size: 19.752173913043pt!important;
+}
+.tag-link-21{
+  font-size: 20.24347826087pt!important;
+}
+.tag-link-22{
+  font-size: 20.591304347826pt!important;
+}
+.tag-link-23{
+  font-size: 20.91304347826pt!important;
+}
+.tag-link-24{
+  font-size: 21.252173913043pt!important;
+}
+.tag-link-25{
+  font-size: 21.752173913043pt!important;
+}
+.tag-link-26{
+  font-size: 21.94347826087pt!important;
+}
+.tag-link-27{
+  font-size: 22pt!important;
+}
+/*文章导航*/
+.BlogAnchor {
+    /*background: #f4f7f9;*/
+    padding: 10px;
+    line-height: 180%;
+}
+.BlogAnchor p {
+    font-size: 18px;
+    color: #15a230;
+    margin-bottom: 0.3em;
+}
+.BlogAnchor .AnchorContent {
+    padding: 5px 0px;
+}
+.BlogAnchor li{
+    text-indent: 20px;
+    font-size: 14px;
+}
+#AnchorContentToggle {
+    font-size: 13px;
+    font-weight: normal;
+    color: #FFF;
+    display: inline-block;
+    line-height: 20px;
+    background: #5cc26f;
+    font-style: normal;
+    padding: 1px 8px;
+    margin-right: 10px;
+}
+.BlogAnchor a:hover {
+    color: #5cc26f;
+}
+.BlogAnchor a {
+    text-decoration: none;
+}
+/*后台table*/
+.manage-table{
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-left: 10px;
+  clear: both;
+}
+/*editor 添加文章*/
+@media (min-width:768px){
+  #selecet-addtopic{
+    width: 90px;
+    position: absolute;
+    right: 50px;
+    top: 10px;
+  }
+}
+@media (min-width:768px) {
+  .choose-tag{
+    position: absolute;
+    right: 153px;
+    top: 10px;
+  }
+}
+.choose-tag .dropdown-menu{
+  padding: 5px 5px;
+}
+.choose-tag .dropdown-menu span, #newtopic-tag span{
+  cursor: pointer;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
+#newtopic-tag{
+  position: absolute;
+  left: 15px;
+}
+.remove-tag{
+  font-size:14px;
+  color:#808080;
+  margin-left:4px;
+}
+.remove-tag:hover{
+  color: white;
+}
+/*@media (min-width:500px){
+  #add-topic-selecet{
+    width: 100px;
+    position: absolute;
+    right: 20px;
+    top: 10px;
+  }
+}*/

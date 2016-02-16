@@ -1,9 +1,10 @@
-package mgodb
+package models
 
 import (
-	// "fmt"
+	"fmt"
+	// "sort"
+	// "strings"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
@@ -20,8 +21,9 @@ type User struct {
 	UserName string // 账户ID
 	PassWord string // 账户密码
 	Email    string // email
+	Salt     string
 	/* 资料补充 */
-	Sex       int    // 1:男， 2：女
+	Sex       string // 1:男， 2：女
 	PNumber   int64  // 手机号
 	Address   string // 住址
 	Education string // 教育
@@ -29,25 +31,23 @@ type User struct {
 	/* 自动记录 */
 	CreateTime time.Time // 创建时间
 	LoginTime  time.Time // 登录时间
+	LoginIp    string    // 登录ip
 	LogoutTime time.Time // 登出时间
 
 	/* 个性设置 */
 	BlogName  string // 博客名
-	Motto     string // 座右铭
 	Introduce string // 个人简介
-	Bg        string // 图片背景
+	HeadIcon  string // 头像
 	/* 博客信息 */
-	Tags       []Tag      // 标签
-	Categories []Category // 分类
-	Links      []Link     // 友情链接
-	/* 文章id */
-	Previews PRE  // 文章基础预览
-	NeedSort bool // 是否该排序
+	Tags       map[string]*Tag // 标签
+	Categories SortCategory    // 分类 id-->count
+	Socials    SortSocial      // social
+	Blogrolls  SortBlogroll    // 友情链接
 }
 
 type UserMgr struct {
 	lock  sync.Mutex
-	Users map[string]*User // userid >> *User
+	Users map[string]*User // userid --> *User
 }
 
 func NewUM() *UserMgr { return &UserMgr{Users: make(map[string]*User)} }
@@ -55,7 +55,6 @@ func NewUM() *UserMgr { return &UserMgr{Users: make(map[string]*User)} }
 var UMgr = NewUM()
 
 func init() {
-	UMgr.loadUsers()
 	go schedule()
 }
 
@@ -75,33 +74,24 @@ func (m *UserMgr) loadUsers() {
 	if err != nil {
 		panic(err)
 	}
+	log.Debug(len(users))
 	for _, u := range users {
-		u.Sort()
+		for _, t := range u.Tags {
+			t.DoClass()
+		}
 		m.Users[u.UserName] = u
 	}
 }
 
-func (m *UserMgr) RegisterUser(name, passwd, email string) int {
+func (m *UserMgr) RegisterUser(user *User) int {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	name = strings.ToLower(name)
-	passwd = strings.ToLower(passwd)
-	if ok := db.KeyIsExsit(DB, C_USER, "username", name); ok {
-		return RS.RS_user_exist
-	}
-	newpasswd := helper.EncryptPasswd(name, passwd)
-	user := User{
-		UserName:   name,
-		PassWord:   newpasswd,
-		Email:      email,
-		CreateTime: time.Now(),
-	}
-	err := db.Insert(DB, C_USER, user)
+	err := db.Update(DB, C_USER, bson.M{"username": user.UserName}, *user)
 	if err != nil {
 		log.Error(err)
-		return RS.RS_failed
+		return RS.RS_register_failed
 	}
-	m.Users[name] = &user
+	m.Users[user.UserName] = user
 	return RS.RS_success
 }
 
@@ -122,7 +112,7 @@ func (m *UserMgr) LoginUser(name, passwd string) int {
 	if user == nil {
 		return RS.RS_user_inexistence
 	}
-	if user.PassWord != helper.EncryptPasswd(name, passwd) {
+	if user.PassWord != helper.EncryptPasswd(name, passwd, user.Salt) {
 		return RS.RS_password_error
 	}
 	user.LoginTime = time.Now()
@@ -135,7 +125,7 @@ func (m *UserMgr) LogoutUser(name string) int {
 		return RS.RS_user_inexistence
 	}
 	user.LogoutTime = time.Now()
-	db.Update(DB, C_USER, bson.M{"accountid": name}, *m.Users[name])
+	db.Update(DB, C_USER, bson.M{"username": name}, *m.Users[name])
 	return RS.RS_success
 }
 
@@ -154,340 +144,228 @@ func (m *UserMgr) UpdateUsers() int {
 }
 
 //-------------------------------user-------------------------------------
-func (u *User) ChangePass(oldpass, newpass string) int {
-	if u.PassWord != helper.EncryptPasswd(u.UserName, oldpass) {
-		return RS.RS_password_error
-	}
-	u.PassWord = helper.EncryptPasswd(u.UserName, newpass)
-	return RS.RS_success
-}
-
-func (u *User) ChangeInfo(args map[string]interface{}) int {
-	sex := args["sex"].(int)
-	pn := args["phonenumber"].(int64)
-	addr := args["address"].(string)
-	ed := args["education"].(string)
-	rn := args["realname"].(string)
-
-	u.Sex = sex
-	u.PNumber = pn
-	u.Address = addr
-	u.Education = ed
-	u.RealName = rn
-	return RS.RS_success
-}
-
-type Preview struct {
-	ID         int32     // 文章ID
-	Title      string    // 标题
-	Content    string    // 预览内容
-	Group      string    // 分类
-	Tags       []Tag     // 标签
-	Views      int       // 浏览数
-	IsDrafts   bool      `json:"-"` // 是否草稿
-	TopTime    time.Time `json:"-"` // 置顶时间(0:不置顶, >0:置顶)
-	CreateTime time.Time // 创建时间
-	UpdateTime time.Time // 更新时间
-}
-
-type Link struct {
-	Addr string // 链接地址
-	Name string // 链接名
-}
-
-type Tag struct { // 标签
-	Name string
-}
-
-type Category struct { // 分类
-	Name  string
-	Count int64
-}
-
-// preview
-type PRE []*Preview
-
-func (p PRE) Less(i, j int) bool {
-	if p[i].TopTime.After(p[j].TopTime) {
-		return true
-	} else if p[i].CreateTime.After(p[j].CreateTime) {
-		return true
-	}
-	return false
-}
-func (p PRE) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-func (p PRE) Len() int {
-	return len(p)
-}
-
-func (u *User) Sort() {
-	if u.NeedSort {
-		sort.Sort(u.Previews)
-		u.NeedSort = false
-	}
-}
-
-const pagecount = 15
-
-func (u *User) GetSimplePreview(id int32) *Preview {
-	u.Sort()
-	for _, pre := range u.Previews {
-		if pre.ID == id {
-			return pre
+func (u *User) GetCategoryByID(id string) *Category {
+	for _, c := range u.Categories {
+		if c.ID == id {
+			return c
 		}
 	}
 	return nil
 }
-
-func getInt(length int, count int) (maxpage int) {
-	maxpage = length / count
-	over := length % count
-	if over > 0 {
-		maxpage += 1
+func (u *User) AddCategory(cat *Category) int {
+	if u.GetCategoryByID(cat.ID) == nil {
+		u.Categories = append(u.Categories, cat)
+		sort.Sort(u.Categories)
+		return RS.RS_success
 	}
-	return
+	return RS.RS_failed
 }
-
-func (u *User) GetPreviews(page int) ([]*Preview, int) {
-	u.Sort()
-	length := len(u.Previews)
-	if length <= pagecount {
-		return u.Previews, 1
-	}
-	maxpage := getInt(length, pagecount)
-
-	index := page * pagecount
-	end := length - index
-	start := end - pagecount
-	if start < 0 {
-		start = 0
-	}
-	return u.Previews[start:end], maxpage
-}
-
-func (u *User) GetPreviewByCategory(name string, page int) ([]*Preview, int) {
-	u.Sort()
-	pw := []*Preview{}
-	for _, v := range u.Previews {
-		if v.Group == name {
-			pw = append(pw, v)
-		}
-	}
-
-	length := len(pw)
-	if length <= pagecount {
-		return pw, 1
-	}
-	maxpage := getInt(length, pagecount)
-	index := page * pagecount
-	end := length - index
-	start := end - pagecount
-	if start < 0 {
-		start = 0
-	}
-	return pw[start:end], maxpage
-}
-
-func (u *User) GetPreviewByTag(name string, page int) ([]*Preview, int) {
-	u.Sort()
-	pw := []*Preview{}
-	for _, v := range u.Previews {
-		for _, val := range v.Tags {
-			if name == val.Name {
-				pw = append(pw, v)
-				break
-			}
-		}
-	}
-	length := len(pw)
-	if length <= pagecount {
-		return pw, 1
-	}
-	maxpage := getInt(length, pagecount)
-	index := page * pagecount
-	end := length - index
-	start := end - pagecount
-	if start < 0 {
-		start = 0
-	}
-	return pw[start:end], maxpage
-}
-
-func (u *User) TopPreview(id int32) {
-	for _, v := range u.Previews {
-		if v.ID == id {
-			v.TopTime = time.Now()
-			break
-		}
-	}
-	u.NeedSort = true
-}
-
-func (u *User) CancelTopview(id int32) {
-	for _, v := range u.Previews {
-		if v.ID == id {
-			v.TopTime = time.Time{}
-			break
-		}
-	}
-	u.NeedSort = true
-}
-
-func (u *User) AddPreview(title, content, group, tag string, isdrafts, istop bool) int {
-	tag_slice := strings.Split(tag, "|")
-	var tags []Tag
-	for _, v := range tag_slice {
-		tags = append(tags, Tag{v})
-	}
-	runes := []rune(content)
-	pre_content := ""
-	count := 0
-	for i, v := range runes {
-		if v == 10 { // 10 代表回车
-			count++
-			if count >= 8 {
-				pre_content = string(runes[:i]) + " ......"
-				break
-			}
-		}
-	}
-	if count < 8 {
-		pre_content = string(runes)
-	}
-
-	id := getNextArticleID()
-	var toptime time.Time
-	if istop {
-		toptime = time.Now()
-	}
-	var pre = &Preview{
-		ID:         id,
-		Title:      title,
-		Content:    pre_content,
-		Group:      group,
-		Tags:       tags,
-		IsDrafts:   isdrafts,
-		TopTime:    toptime,
-		CreateTime: time.Now(),
-	}
-
-	u.Previews = append(u.Previews, pre)
-	u.addCategoryCount(pre.Group)
-	createArticle(id, content)
-
-	u.NeedSort = true
-	return RS.RS_success
-}
-
-func (u *User) UpdatePreview(art_id int32, title, content, group string, tags []Tag) int {
-	for _, v := range u.Previews {
-		if v.ID == art_id {
-			v.UpdatePreview(art_id, title, content, group, tags)
-		}
-	}
-	return RS.RS_success
-}
-
-func (u *User) DelPreview(art_id int32) int {
-	for i := len(u.Previews) - 1; i >= 0; i-- {
-		if pw := u.Previews[i]; art_id == pw.ID {
-			u.delCategoryCount(pw.Group)
-			u.Previews = append(u.Previews[:i], u.Previews[i+1:]...)
-		}
-	}
-	return RS.RS_success
-}
-
-func (u *User) GetContent(art_id int32) *Content {
-	return getArticleComplete(art_id)
-}
-
-// category
-func (u *User) addCategoryCount(name string) {
-	for i, v := range u.Categories {
-		if v.Name == name {
-			u.Categories[i].Count++
-		}
-	}
-}
-
-func (u *User) delCategoryCount(name string) {
-	for i, v := range u.Categories {
-		if v.Name == name {
-			if v.Count > 0 {
-				u.Categories[i].Count--
-			}
-		}
-	}
-}
-
-func (u *User) GetCategories() []Category {
-	return u.Categories
-}
-
-func (u *User) AddCategory(name string) {
-	c := Category{Name: name}
-	u.Categories = append(u.Categories, c)
-}
-
-func (u *User) DelCategory(name string) {
-	for i, v := range u.Categories {
-		if v.Name == name {
+func (u *User) DelCatgoryByID(id string) int {
+	for i, cat := range u.Categories {
+		if id == cat.ID {
 			u.Categories = append(u.Categories[:i], u.Categories[i+1:]...)
+			delete(TMgr.GroupByCategory, id)
+			return RS.RS_success
 		}
 	}
+	return RS.RS_failed
 }
-
-// tag
-func (u *User) AddTag(name string) {
-	t := Tag{Name: name}
-	u.Tags = append(u.Tags, t)
+func (u *User) ReduceCategoryCount(id string) {
+	category := u.GetCategoryByID(id)
+	if category != nil {
+		category.reduCount()
+	}
 }
-
-func (u *User) GetTags() []Tag {
-	return u.Tags
+func (u *User) AddCategoryCount(id string) {
+	u.GetCategoryByID(id).addCount()
 }
-
-func (u *User) DelTag(name string) {
-	for i, v := range u.Tags {
-		if v.Name == name {
-			u.Tags = append(u.Tags[:i], u.Tags[i+1:]...)
+func (u *User) DelTagByID(id string) int {
+	if u.GetTagByID(id) != nil {
+		delete(u.Tags, id)
+		return RS.RS_success
+	}
+	return RS.RS_failed
+}
+func (u *User) ReduceTagCount(id string) {
+	tag := u.GetTagByID(id)
+	if tag.reduCount(); tag.Count <= 0 {
+		delete(u.Tags, id)
+	}
+}
+func (u *User) GetTagByID(id string) *Tag {
+	return u.Tags[id]
+}
+func (u *User) AddTagCount(id string) {
+	u.GetTagByID(id).addCount()
+}
+func (u *User) AddTag(tag *Tag) int {
+	if t := u.GetTagByID(tag.ID); t == nil {
+		tag.addCount()
+		u.Tags[tag.ID] = tag
+		return RS.RS_success
+	}
+	return RS.RS_tag_exist
+}
+func (u *User) GetSocialByID(id string) *Social {
+	for _, s := range u.Socials {
+		if s.ID == id {
+			return s
 		}
 	}
+	return nil
 }
-
-//
-func (u *User) ModBlogName(name string) {
-	u.BlogName = name
+func (u *User) AddSocial(social *Social) int {
+	if u.GetSocialByID(social.ID) == nil {
+		u.Socials = append(u.Socials, social)
+		sort.Sort(u.Socials)
+		return RS.RS_success
+	}
+	return RS.RS_failed
 }
-
-func (u *User) ModMotto(motto string) {
-	u.Motto = motto
-}
-
-//-----------------------------preview------------------------------
-func (pre *Preview) UpdatePreview(art_id int32, title, content, group string, tags []Tag) {
-	updateArticle(art_id, content)
-	pre.Title = title
-	runes := []rune(content)
-	pre_content := ""
-	count := 0
-	for i, v := range runes {
-		if v == 10 { // 10 代表回车
-			count++
-			if count >= 8 {
-				pre_content = string(runes[:i]) + " ......"
-				break
-			}
+func (u *User) DelSocialByID(id string) int {
+	for i, social := range u.Socials {
+		if id == social.ID {
+			u.Socials = append(u.Socials[:i], u.Socials[i+1:]...)
+			return RS.RS_success
 		}
 	}
-	if count < 8 {
-		pre_content = string(runes)
+	return RS.RS_failed
+}
+func (u *User) GetBlogrollByID(id string) *Blogroll {
+	for _, br := range u.Blogrolls {
+		if br.ID == id {
+			return br
+		}
 	}
-	pre.Content = pre_content
-	pre.Group = group
-	pre.Tags = tags
-	pre.UpdateTime = time.Now()
+	return nil
+}
+func (u *User) AddBlogroll(br *Blogroll) int {
+	if u.GetBlogrollByID(br.ID) == nil {
+		u.Blogrolls = append(u.Blogrolls, br)
+		sort.Sort(u.Blogrolls)
+		return RS.RS_success
+	}
+	return RS.RS_failed
+}
+func (u *User) DelBlogrollByID(id string) int {
+	for i, br := range u.Blogrolls {
+		if id == br.ID {
+			u.Blogrolls = append(u.Blogrolls[:i], u.Blogrolls[i+1:]...)
+			return RS.RS_success
+		}
+	}
+	return RS.RS_failed
+}
+func (u *User) ChangePassword(newP string) {
+	u.PassWord = helper.EncryptPasswd(u.UserName, newP, u.Salt)
+}
+
+// -------------------------------Tags-------------------------------------
+const (
+	Label_default = iota
+	Label_primary
+	Label_success
+	Label_info
+	Label_warning = 10
+)
+
+var TagStyle = map[int]string{
+	Label_default: "label-default",
+	Label_primary: "label-primary",
+	Label_success: "label-success",
+	Label_info:    "label-info",
+	Label_warning: "label-warning",
+}
+
+type Tag struct {
+	ID    string
+	Count int
+	Node  *helper.Node
+}
+
+func NewTag() *Tag {
+	return &Tag{}
+}
+func (t *Tag) DoClass() {
+	if t.Count < 23 {
+		t.Node.Class = "tag-link-" + fmt.Sprint(t.Count)
+	} else {
+		t.Node.Class = "tag-link-" + fmt.Sprint(22)
+	}
+	// t.Nod.Extra = fmt.Sprintf("title='%d topic'", t.Num)
+}
+func (t *Tag) addCount() {
+	t.Count++
+	t.DoClass()
+}
+func (t *Tag) reduCount() {
+	t.Count--
+	t.DoClass()
+}
+func (t *Tag) TagStyle() string {
+	rand := helper.GetRand()
+	style := TagStyle[rand.Intn(len(TagStyle))]
+	return "<span class='label " + style + "'>" + t.ID + "</span>"
+}
+
+// -------------------------------category-------------------------------------
+type SortCategory []*Category
+
+func (sc SortCategory) Len() int           { return len(sc) }
+func (sc SortCategory) Less(i, j int) bool { return sc[i].SortID < sc[j].SortID }
+func (sc SortCategory) Swap(i, j int)      { sc[i], sc[j] = sc[j], sc[i] }
+
+type Category struct {
+	ID         string
+	Count      int
+	IsCategory bool
+	SortID     int
+	CreateTime time.Time
+	Node       *helper.Node
+}
+
+func NewCategory() *Category {
+	return &Category{CreateTime: time.Now()}
+}
+func (c *Category) addCount() {
+	c.Count++
+}
+func (c *Category) reduCount() {
+	c.Count--
+}
+
+// -------------------------------social-------------------------------------
+type SortSocial []*Social
+
+func (ss SortSocial) Len() int           { return len(ss) }
+func (ss SortSocial) Less(i, j int) bool { return ss[i].SortID < ss[j].SortID }
+func (ss SortSocial) Swap(i, j int)      { ss[i], ss[j] = ss[j], ss[i] }
+
+type Social struct {
+	ID         string
+	SortID     int
+	CreateTime time.Time
+	Node       *helper.Node
+}
+
+func NewSocial() *Social {
+	return &Social{CreateTime: time.Now()}
+}
+
+// -------------------------------blogroll-------------------------------------
+type SortBlogroll []*Blogroll
+
+func (sb SortBlogroll) Len() int           { return len(sb) }
+func (sb SortBlogroll) Less(i, j int) bool { return sb[i].SortID < sb[j].SortID }
+func (sb SortBlogroll) Swap(i, j int)      { sb[i], sb[j] = sb[j], sb[i] }
+
+type Blogroll struct {
+	ID         string
+	SortID     int
+	CreateTime time.Time
+	Node       *helper.Node
+}
+
+func NewBlogroll() *Blogroll {
+	return &Blogroll{CreateTime: time.Now()}
 }
