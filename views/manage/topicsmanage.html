@@ -86,7 +86,6 @@
           pushMessage('info', '错误|请填写完整。');
           return;
         }
-        console.log(tags)
         var resp = get('post', location.pathname, {flag:'addtopic',title:title,content:content, cat:category, tags: tags.toString()}, false);
         if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
         location.reload();
@@ -98,9 +97,10 @@
         checkedID.push($(this).attr("id"));
       });
       if (checkedID.length==0){
-        pushMessage('warning', '错误|请选择要删除的文章。');
+        pushMessage('info', '错误|请选择要删除的文章。');
         return;
       }
+      if (!confirm('确定要删除所选的文章吗？')){return;}
       var resp = get('post', location.pathname, {flag:'deletetopics', ids:checkedID.toString()},false);
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
       location.reload();

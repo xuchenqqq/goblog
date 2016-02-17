@@ -57,12 +57,12 @@ $(function () {
     $("#btn-marked").click(function () {
         if (conf.EDIT_MODEL == 1) {
             conf.EDIT_MODEL = 0;
-            $("#btn-marked").removeClass("glyphicon-eye-open");
-            $("#btn-marked").addClass("glyphicon-eye-close")
+            $("#btn-marked").removeClass("fa-eye");
+            $("#btn-marked").addClass("fa-eye-slash")
         }else{
             conf.EDIT_MODEL = 1;
-            $("#btn-marked").addClass("glyphicon-eye-open");
-            $("#btn-marked").removeClass("glyphicon-eye-close")
+            $("#btn-marked").removeClass("fa-eye-slash")
+            $("#btn-marked").addClass("fa-eye");
         }
         changeview();
     });

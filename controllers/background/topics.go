@@ -73,7 +73,6 @@ func (this *TopicsController) getTopics(resp *helper.Response) {
 	cat := this.GetString("cat")
 	page, err := this.GetInt("page")
 	if err != nil {
-		log.Debug(err)
 		page = 1
 	}
 	var html string
@@ -113,27 +112,54 @@ func (this *TopicsController) getTopics(resp *helper.Response) {
 	}
 	for _, topic := range topics {
 		html += `<tr><th scope="row"><input type="checkbox" id="` + fmt.Sprint(topic.ID) + `"></th>`
-		html += "<td>" + fmt.Sprint(topic.ID) + "</td><td>" + topic.Title + "</td><td>" + topic.CategoryID + "</td><td>" + fmt.Sprint(topic.TagIDs) + "</td><td>" + topic.Author + "</td><td>" + topic.CreateTime.Format(helper.Layout_y_m_d_time) + "</td><td>" + topic.EditTime.Format(helper.Layout_y_m_d_time) + "</td>"
+		html += "<td>" + fmt.Sprint(topic.ID) + "</td><td>" + topic.Title + "</td><td class='category'>" + topic.CategoryID + "</td><td>" + fmt.Sprint(topic.TagIDs) + "</td><td>" + topic.Author + "</td><td>" + topic.CreateTime.Format(helper.Layout_y_m_d_time) + "</td><td>" + topic.EditTime.Format(helper.Layout_y_m_d_time) + "</td>"
 		html += `<td><button type="button" data-toggle="modal" data-target="#gridSystemModal" class="btn btn-info btn-xs modify">修改</button><button type="button" class="btn btn-warning btn-xs delete-topic">删除</button></td>`
 		html += "</tr>"
 	}
-	script += `$('.modify').on('click',function(){
+	script += `
+	$('.modify').each(function(i){
+		$(this).on('click',function(){
 			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('warning', '对不起|系统错误。');}
+			if (id==""){pushMessage('info', '对不起|系统错误。');}
 			var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
 			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
 			$('#gridModalLabel').text('修改文章');
-			$('.modal-body .container-fluid').html(resp.Data);
+			if ($('#selecet-addtopic').length == 0){
+				var cat = $(this).parent().parent().find('.category').text();
+        		var resp = get('post', location.pathname, {flag:'category',selected:cat}, false);
+        		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+        		$('#gridModalLabel').append(resp.Data);
+      		}
+			resp = get('post', location.pathname, {flag:"editor"}, false);
+      		var html = '<div class="row">'+ resp.Data +'</div>';
+      		$('.modal-body .container-fluid').html(html);
+      		resp = get('post', location.pathname, {flag:'modify', id:id}, false);
+      		$('#editor-title').attr('value',resp.Data.Title);
+      		$('#editor-area').text(resp.Data.Content);
+      		$('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="changemodifytopic" class="btn btn-primary">Save changes</button>');
+      		$('#changemodifytopic').on('click', function(){
+        		var title = $('#editor-title').val();
+        		var content = $('#editor-area').val();
+        		var category = $('#selecet-addtopic').val();
+        		if (title == "" || content == ""){
+          			pushMessage('info', '错误|请填写完整。');
+          			return;
+        		}
+        		var resp = get('post', location.pathname, {flag:'domodifytopic',title:title,content:content, cat:category, tags: tags.toString()}, false);
+        		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+        		location.reload();
+        	});
 		});
-		$('.delete-topic').on('click', function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('warning', '对不起|系统错误。');return;}
-			if (!confirm('确定要删除该文章吗？')){return;}
-			var resp = get('post', location.pathname, {flag:'deletetopic', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});	
-		</script>`
+	});
+	$('.delete-topic').on('click', function(){
+		var id = $(this).parent().parent().find('th input').attr('id');
+		if (id==""){pushMessage('info', '对不起|系统错误。');return;}
+		if (!confirm('确定要删除该文章吗？')){return;}
+		var resp = get('post', location.pathname, {flag:'deletetopic', id:id}, false);
+		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+		location.reload();
+	});	
+	</script>`
 	resp.Data = html + script
 }
 func (this *TopicsController) addTopic(resp *helper.Response) {
@@ -170,32 +196,33 @@ func (this *TopicsController) addTopic(resp *helper.Response) {
 	}
 	resp.Success()
 }
+
+type modifyTopic struct {
+	Title    string
+	Content  string
+	Category string
+	Tags     []string
+}
+
 func (this *TopicsController) getTopic(resp *helper.Response) {
-	// var html string = `<div class="row"><textarea class="form-control" id="topic-content" rows="20">`
-	// id := this.GetString("id")
-	// if id != "" {
-	// 	for _, cat := range models.Blogger.Categories {
-	// 		if cat.IsCategory && cat.ID == id {
-	// 			b, _ := json.Marshal(cat)
-	// 			html += string(b)
-	// 		}
-	// 	}
-	// } else {
-	// 	resp.Data = ""
-	// }
-	// html += "</textarea></div>"
-	// script := `<script>
-	// 	$('#gridModalLabel').text('修改分类');
-	// 	$('#cat-content').text(JSONFormat($('#cat-content').val()));
-	// 	$('#change').on('click',function(){
-	// 		var content = $('#cat-content').val();
-	// 		if (content==""){pushMessage('warning', '错误|请填写完整。');return;}
-	// 		var resp = get('post', location.pathname, {flag:'domodify',json:content},false);
-	// 		console.log(resp)
-	// 		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-	// 		location.reload();
-	// 	});</script>`
-	// resp.Data = html + script
+	id, err := this.GetInt("id")
+	if err != nil {
+		resp.Status = RS.RS_failed
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|ID格式不正确。"}
+		return
+	}
+	if topic := models.TMgr.GetTopic(int32(id)); topic == nil {
+		resp.Status = RS.RS_failed
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统未查询到该文章。"}
+		return
+	} else {
+		mt := &modifyTopic{}
+		mt.Title = topic.Title
+		mt.Content = string(topic.Content)
+		mt.Tags = topic.TagIDs
+		mt.Category = topic.CategoryID
+		resp.Data = mt
+	}
 }
 func (this *TopicsController) doModify(resp *helper.Response) {
 
@@ -214,9 +241,14 @@ func (this *TopicsController) category(resp *helper.Response) {
 	</div>
 	<select id="selecet-addtopic" class="form-control" style="width:auto">
 	`
+	selected := this.GetString("selected")
 	for _, cat := range models.Blogger.Categories {
 		if cat.IsCategory {
-			html += "<option value='" + cat.ID + "'>" + cat.ID + "</option>"
+			if cat.ID != "" && cat.ID == selected {
+				html += "<option selected value='" + cat.ID + "'>" + cat.ID + "</option>"
+			} else {
+				html += "<option value='" + cat.ID + "'>" + cat.ID + "</option>"
+			}
 		}
 	}
 	html += `</select>
@@ -235,7 +267,6 @@ func (this *TopicsController) category(resp *helper.Response) {
 		function removetag(e){
 			var parent = e.parentElement;
 			var tag = parent.innerText.substring(0,parent.innerText.length-1);
-			console.log(tag);
 			tags.remove(tag);
 			parent.remove();
 		};

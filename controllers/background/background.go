@@ -38,7 +38,7 @@ func (this *BackgroundController) LeftBar(index string) {
 	this.Data["LeftBar"] = html
 }
 
-// ----------------------------------------------------------
+// ----------------------------- 过滤登录 -----------------------------
 var FilterUser = func(ctx *context.Context) {
 	val, ok := ctx.Input.Session(sessionname).(string)
 	log.Debugf("login=%s", val)
