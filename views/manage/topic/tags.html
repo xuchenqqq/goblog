@@ -1,0 +1,31 @@
+<div class="input-group input-group-sm" style="margin-bottom:2px;">
+	<input type="text" class="form-control" id='tag-content' placeholder="Add a tag">
+	<span class="input-group-btn">
+	  	<button class="btn btn-default" id='add-tag' type="button">Add</button>
+	</span>
+</div><!-- /input-group -->
+{{str2html .Content}}
+<script>
+$('#dropdown-tag span.label').each(function(i){
+	$(this).on('click', function(){
+		var tag = $(this).text();
+		console.log(tag);
+		if (tags.indexOf(tag) != -1){
+			return;
+		}
+		tags.push(tag);
+		var classname = $(this).attr('class')
+		var html = '<span class="'+ classname +'">'+ tag +'<span aria-hidden="true" class="remove-tag" onclick="removetag(this);">×</span></span>';
+		$('#newtopic-tag').append(html);
+	});
+});
+$('#add-tag').on('click', function(){
+	var tag = $('#tag-content').val();
+	if (tag == ''|| tags.indexOf(tag)!=-1){
+		pushMessage('info', '错误|你需要填写新tag。');
+		return;
+	}
+	tags.push(tag);
+	$('#newtopic-tag').append('<span class="label label-primary">'+ tag +'<span aria-hidden="true" class="remove-tag" onclick="removetag(this);">×</span></span>');
+});
+</script>

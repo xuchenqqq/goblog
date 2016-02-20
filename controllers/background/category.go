@@ -25,7 +25,7 @@ func (this *CategoryController) Get() {
 	this.Content()
 }
 func (this *CategoryController) Content() {
-	catT := beego.BeeTemplates["manage/categoryTag.html"]
+	catT := beego.BeeTemplates["manage/category/categoryTemplate.html"]
 	var buffer bytes.Buffer
 	catT.Execute(&buffer, "")
 	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
@@ -56,88 +56,70 @@ func (this *CategoryController) Post() {
 	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 func (this *CategoryController) getCategory(resp *helper.Response) {
-	var html string = `<div class="row"><textarea class="form-control" id="cat-content" rows="20">`
 	id := this.GetString("id")
 	if id != "" {
-		for _, cat := range models.Blogger.Categories {
-			if cat.IsCategory && cat.ID == id {
-				b, _ := json.Marshal(cat)
-				html += string(b)
-			}
+		modifycategoryT := beego.BeeTemplates["manage/category/modifycategory.html"]
+		var buffer bytes.Buffer
+		if cat := models.Blogger.GetCategoryByID(id); cat != nil {
+			b, _ := json.Marshal(cat)
+			modifycategoryT.Execute(&buffer, map[string]string{"Content": string(b)})
+			resp.Data = buffer.String()
+			return
 		}
-	} else {
-		resp.Data = ""
 	}
-	html += "</textarea></div>"
-	script := `<script>
-		$('#gridModalLabel').text('修改分类');
-		$('#cat-content').text(JSONFormat($('#cat-content').val()));
-		$('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="modifycat" class="btn btn-primary">Save changes</button>');
-		$('#modifycat').on('click',function(){
-			var content = $('#cat-content').val();
-			if (content==""){pushMessage('info', '错误|请填写完整。');return;}
-			var resp = get('post', location.pathname, {flag:'domodify',json:content},false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});</script>`
-	resp.Data = html + script
+	resp.Data = ""
 }
+
+type category struct {
+	ID     string
+	SortID int
+	Extra  string
+	Name   string
+	Count  int
+	Time   string
+}
+
 func (this *CategoryController) getCategories(resp *helper.Response) {
-	var html string
+	categoriesT := beego.BeeTemplates["manage/category/categories.html"]
+	var buffer bytes.Buffer
+	var categories []*category
 	for _, cat := range models.Blogger.Categories {
 		if len(cat.Node.Children) > 0 && cat.IsCategory {
-			html += "<tr>"
-			html += "<th scope='row'><input id='" + cat.ID + "'' type='checkbox'></th>"
-			html += "<td>" + fmt.Sprint(cat.SortID) + "</td>"
-			html += "<td>" + cat.ID + "</td>"
-			html += "<td>" + cat.Node.Children[0].Extra + "</td>"
-			html += "<td>" + cat.Node.Children[0].Text + "</td>"
-			html += "<td>" + fmt.Sprint(cat.Count) + "</td>"
-			html += "<td>" + cat.CreateTime.Format(helper.Layout_y_m_d_time) + "</td>"
-			html += `<td><button type="button" data-toggle="modal" data-target="#gridSystemModal" class="btn btn-info btn-xs modify">修改</button><button type="button" class="btn btn-warning btn-xs delete-cat">删除</button></td>`
-			html += "</tr>"
+			temp := &category{}
+			temp.ID = cat.ID
+			temp.SortID = cat.SortID
+			temp.Extra = cat.Node.Children[0].Extra
+			temp.Name = cat.Node.Children[0].Text
+			temp.Count = cat.Count
+			temp.Time = cat.CreateTime.Format(helper.Layout_y_m_d_time)
+			categories = append(categories, temp)
 		}
 	}
-	var script string
-	script = `<script>$('.modify').on('click',function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('info', '对不起|系统错误。');}
-			var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			$('.modal-body .container-fluid').html(resp.Data);
-		});
-		$('.delete-cat').on('click', function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('info', '对不起|系统错误。');}
-			if (!confirm('确定要删除该分类吗？')){return;}
-			var resp = get('post', location.pathname, {flag:'deletecat', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});	
-		</script>`
-	resp.Data = html + script
+	categoriesT.Execute(&buffer, map[string]interface{}{"Categories": categories})
+	resp.Data = buffer.String()
 }
+
+type tag struct {
+	ID    string
+	Extra string
+	Name  string
+	Count int
+}
+
 func (this *CategoryController) getTag(resp *helper.Response) {
-	var html string
-	for _, tag := range models.Blogger.Tags {
-		html += "<tr>"
-		html += "<th scope='row'><input id='" + tag.ID + "'' type='checkbox'></th>"
-		html += "<td>" + tag.ID + "</td>"
-		html += "<td>" + tag.Node.Extra + "</td>"
-		html += "<td>" + tag.Node.Text + "</td>"
-		html += "<td>" + fmt.Sprint(tag.Count) + "</td>"
-		html += `<td><button type="button" class="btn btn-warning btn-xs delete-tag">删除</button></td>`
-		html += "</tr>"
+	tagsT := beego.BeeTemplates["manage/category/tags.html"]
+	var buffer bytes.Buffer
+	var tags []*tag
+	for _, t := range models.Blogger.Tags {
+		temp := &tag{}
+		temp.ID = t.ID
+		temp.Extra = t.Node.Extra
+		temp.Name = t.Node.Text
+		temp.Count = t.Count
+		tags = append(tags, temp)
 	}
-	script := `<script>$('.delete-tag').on('click', function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('info', '对不起|系统错误。');}
-			if (!confirm('确定要删除该标签吗？')){return;}
-			var resp = get('post', location.pathname, {flag:'deletetag', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});</script>`
-	resp.Data = html + script
+	tagsT.Execute(&buffer, map[string]interface{}{"Tags": tags})
+	resp.Data = buffer.String()
 }
 
 func (this *CategoryController) doModify(resp *helper.Response) {

@@ -25,7 +25,7 @@ func (this *BlogrollController) Get() {
 }
 
 func (this *BlogrollController) Content() {
-	blogrollT := beego.BeeTemplates["manage/blogroll.html"]
+	blogrollT := beego.BeeTemplates["manage/blogroll/blogrollTemplate.html"]
 	var buffer bytes.Buffer
 	blogrollT.Execute(&buffer, "")
 	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
@@ -52,37 +52,30 @@ func (this *BlogrollController) Post() {
 	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 
+type blogroll struct {
+	ID     string
+	SortID int
+	Extra  string
+	Name   string
+	Time   string
+}
+
 func (this *BlogrollController) getBlogrolls(resp *helper.Response) {
-	var html string
+	var blogrolls []*blogroll
 	for _, br := range models.Blogger.Blogrolls {
-		html += "<tr>"
-		html += "<th scope='row'><input id='" + br.ID + "'' type='checkbox'></th>"
-		html += "<td>" + fmt.Sprint(br.SortID) + "</td>"
-		html += "<td>" + br.ID + "</td>"
-		html += "<td>" + br.Node.Children[0].Extra + "</td>"
-		html += "<td>" + br.Node.Children[0].Text + "</td>"
-		html += "<td>" + br.CreateTime.Format(helper.Layout_y_m_d_time) + "</td>"
-		html += `<td><button type="button" data-toggle="modal" data-target="#gridSystemModal" class="btn btn-info btn-xs modify">修改</button><button type="button" class="btn btn-warning btn-xs delete-blogroll">删除</button></td>`
-		html += "</tr>"
+		temp := &blogroll{}
+		temp.ID = br.ID
+		temp.SortID = br.SortID
+		temp.Extra = br.Node.Children[0].Extra
+		temp.Name = br.Node.Children[0].Text
+		temp.Time = br.CreateTime.Format(helper.Layout_y_m_d_time)
+		blogrolls = append(blogrolls, temp)
 	}
-	var script string
-	script = `<script>$('.modify').on('click',function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('info', '对不起|系统错误。');}
-			var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			$('.modal-body .container-fluid').html(resp.Data);
-		});
-		$('.delete-blogroll').on('click', function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('info', '对不起|系统错误。');}
-			if (!confirm('确定要删除该链接吗？')){return;}
-			var resp = get('post', location.pathname, {flag:'deleteblogroll', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});	
-		</script>`
-	resp.Data = html + script
+	Map := map[string]interface{}{"Blogrolls": blogrolls}
+	blogrollsT := beego.BeeTemplates["manage/blogroll/blogrolls.html"]
+	var buffer bytes.Buffer
+	blogrollsT.Execute(&buffer, Map)
+	resp.Data = buffer.String()
 }
 func (this *BlogrollController) addBlogroll(resp *helper.Response) {
 	content := this.GetString("json")
@@ -101,32 +94,18 @@ func (this *BlogrollController) addBlogroll(resp *helper.Response) {
 	}
 }
 func (this *BlogrollController) getBlogroll(resp *helper.Response) {
-	var html string = `<div class="row"><textarea class="form-control" id="blogroll-content" rows="20">`
 	id := this.GetString("id")
 	if id != "" {
-		for _, br := range models.Blogger.Blogrolls {
-			if br.ID == id {
-				b, _ := json.Marshal(br)
-				html += string(b)
-			}
+		modifyBlogrollT := beego.BeeTemplates["manage/blogroll/modifyblogroll.html"]
+		var buffer bytes.Buffer
+		if br := models.Blogger.GetBlogrollByID(id); br != nil {
+			b, _ := json.Marshal(br)
+			modifyBlogrollT.Execute(&buffer, map[string]string{"Content": string(b)})
+			resp.Data = buffer.String()
+			return
 		}
-	} else {
-		resp.Data = ""
 	}
-	html += "</textarea></div>"
-	script := `<script>
-		$('#gridModalLabel').text('修改分类');
-		$('#blogroll-content').text(JSONFormat($('#blogroll-content').val()));
-		$('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="modifyblogroll" class="btn btn-primary">Save changes</button>');
-		$('#modifyblogroll').on('click',function(){
-			var content = $('#blogroll-content').val();
-			if (content==""){pushMessage('warning', '错误|请填写完整。');return;}
-			var resp = get('post', location.pathname, {flag:'domodify',json:content},false);
-			console.log(resp)
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});</script>`
-	resp.Data = html + script
+	resp.Data = ""
 }
 func (this *BlogrollController) doModify(resp *helper.Response) {
 	content := this.GetString("json")

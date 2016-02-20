@@ -24,7 +24,7 @@ func (this *SocialController) Get() {
 	this.Content()
 }
 func (this *SocialController) Content() {
-	socialT := beego.BeeTemplates["manage/social.html"]
+	socialT := beego.BeeTemplates["manage/social/socialTemplate.html"]
 	var buffer bytes.Buffer
 	socialT.Execute(&buffer, "")
 	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
@@ -67,65 +67,45 @@ func (this *SocialController) addSocial(resp *helper.Response) {
 		return
 	}
 }
+
+type social struct {
+	ID     string
+	SortID int
+	Extra  string
+	Class  string
+	Time   string
+}
+
 func (this *SocialController) getSocials(resp *helper.Response) {
-	var html string
-	for _, social := range models.Blogger.Socials {
-		html += "<tr>"
-		html += "<th scope='row'><input id='" + social.ID + "'' type='checkbox'></th>"
-		html += "<td>" + fmt.Sprint(social.SortID) + "</td>"
-		html += "<td>" + social.ID + "</td>"
-		html += "<td>" + social.Node.Children[0].Extra + "</td>"
-		html += "<td><i class='" + social.Node.Children[0].Children[0].Class + "'</i></td>"
-		html += "<td>" + social.CreateTime.Format(helper.Layout_y_m_d_time) + "</td>"
-		html += `<td><button type="button" data-toggle="modal" data-target="#gridSystemModal" class="btn btn-info btn-xs modify">修改</button><button type="button" class="btn btn-warning btn-xs delete-social">删除</button></td>`
-		html += "</tr>"
+	socialsT := beego.BeeTemplates["manage/social/socials.html"]
+	var buffer bytes.Buffer
+	var socials []*social
+	for _, s := range models.Blogger.Socials {
+		temp := &social{}
+		temp.ID = s.ID
+		temp.SortID = s.SortID
+		temp.Extra = s.Node.Children[0].Extra
+		temp.Class = s.Node.Children[0].Children[0].Class
+		temp.Time = s.CreateTime.Format(helper.Layout_y_m_d_time)
+		socials = append(socials, temp)
 	}
-	var script string
-	script = `<script>$('.modify').on('click',function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('warning', '对不起|系统错误。');}
-			var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			$('.modal-body .container-fluid').html(resp.Data);
-		});
-		$('.delete-social').on('click', function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('warning', '对不起|系统错误。');}
-			if (!confirm('确定要删除该工具吗？')){return;}
-			var resp = get('post', location.pathname, {flag:'deletesocial', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});	
-		</script>`
-	resp.Data = html + script
+	err := socialsT.Execute(&buffer, map[string]interface{}{"Socials": socials})
+	log.Error(err)
+	resp.Data = buffer.String()
 }
 func (this *SocialController) getSocial(resp *helper.Response) {
-	var html string = `<div class="row"><textarea class="form-control" id="social-content" rows="20">`
 	id := this.GetString("id")
 	if id != "" {
-		for _, social := range models.Blogger.Socials {
-			if social.ID == id {
-				b, _ := json.Marshal(social)
-				html += string(b)
-			}
+		modifysocialT := beego.BeeTemplates["manage/social/modifysocial.html"]
+		var buffer bytes.Buffer
+		if social := models.Blogger.GetSocialByID(id); social != nil {
+			b, _ := json.Marshal(social)
+			modifysocialT.Execute(&buffer, map[string]string{"Content": string(b)})
+			resp.Data = buffer.String()
+			return
 		}
-	} else {
-		resp.Data = ""
 	}
-	html += "</textarea></div>"
-	script := `<script>
-		$('#gridModalLabel').text('修改分类');
-		$('#social-content').text(JSONFormat($('#social-content').val()));
-		$('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="modifysocial" class="btn btn-primary">Save changes</button>');
-		$('#modifysocial').on('click',function(){
-			var content = $('#social-content').val();
-			if (content==""){pushMessage('warning', '错误|请填写完整。');return;}
-			var resp = get('post', location.pathname, {flag:'domodify',json:content},false);
-			console.log(resp)
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			location.reload();
-		});</script>`
-	resp.Data = html + script
+	resp.Data = ""
 }
 func (this *SocialController) doModify(resp *helper.Response) {
 	content := this.GetString("json")

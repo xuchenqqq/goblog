@@ -25,7 +25,7 @@ func (this *TopicsController) Get() {
 }
 
 func (this *TopicsController) Content() {
-	topicT := beego.BeeTemplates["manage/topicsmanage.html"]
+	topicT := beego.BeeTemplates["manage/topic/topicTemplate.html"]
 	var buffer bytes.Buffer
 	Map := make(map[string]string)
 	var html string
@@ -69,98 +69,70 @@ func (this *TopicsController) Post() {
 	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 
+type topic struct {
+	ID         int32
+	Title      string
+	TagIDs     []string
+	CategoryID string
+	Author     string
+	CreateTime string
+	EditTime   string
+}
+
 func (this *TopicsController) getTopics(resp *helper.Response) {
 	cat := this.GetString("cat")
 	page, err := this.GetInt("page")
 	if err != nil {
 		page = 1
 	}
-	var html string
-	var topics []*models.Topic
+	var pageTopics []*models.Topic
 	var remainpage int
 	if cat == "" || cat == "0" {
-		topics, remainpage = models.TMgr.GetTopicsByPage(page)
+		pageTopics, remainpage = models.TMgr.GetTopicsByPage(page)
+		log.Debugf("%s,%s", page, remainpage)
 		if remainpage == -1 {
 			resp.Data = "<script>$('#previous').addClass('disabled');$('#next').addClass('disabled');pushMessage('info','莫得数据得嘛|是不是页码错了。')</script>"
 			return
 		}
 	} else {
-		topics, remainpage = models.TMgr.GetTopicsByCatgory(cat, page)
+		pageTopics, remainpage = models.TMgr.GetTopicsByCatgory(cat, page)
 		if remainpage == -1 {
 			resp.Data = "<script>$('#previous').addClass('disabled');$('#next').addClass('disabled');pushMessage('info','莫得数据哦|我看是分类或者页码错误。')</script>"
 			return
 		}
 	}
-	var script string = "<script>"
+	topicsT := beego.BeeTemplates["manage/topic/topics.html"]
+	var buffer bytes.Buffer
+	var topics []*topic
+	Map := make(map[string]interface{})
 	if page == 1 {
-		script += "$('#previous').addClass('disabled');"
+		Map["IsFirstPage"] = true
 	} else {
-		script += `$('#previous').removeClass('disabled');$('#previous').one('click', function(){
-			var resp = get('post', location.pathname, {flag:'topics',cat:'` + cat + `',page:'` + fmt.Sprint(page-1) + `'},false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			$('#topics-tbody').html(resp.Data);
-		});`
+		Map["IsFirstPage"] = false
+		Map["CategoryID"] = cat
+		Map["PrePage"] = page - 1
 	}
 	if remainpage == 0 {
-		script += "$('#next').addClass('disabled');"
+		Map["IsLastPage"] = true
 	} else {
-		script += `$('#next').removeClass('disabled');$('#next').one('click', function(){
-			var resp = get('post', location.pathname, {flag:'topics', cat:'` + cat + `',page:'` + fmt.Sprint(page+1) + `'},false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			$('#topics-tbody').html(resp.Data);
-		});`
+		Map["IsLastPage"] = false
+		Map["CategoryID"] = cat
+		Map["NextPage"] = page + 1
 	}
-	for _, topic := range topics {
-		html += `<tr><th scope="row"><input type="checkbox" id="` + fmt.Sprint(topic.ID) + `"></th>`
-		html += "<td>" + fmt.Sprint(topic.ID) + "</td><td>" + topic.Title + "</td><td class='category'>" + topic.CategoryID + "</td><td>" + fmt.Sprint(topic.TagIDs) + "</td><td>" + topic.Author + "</td><td>" + topic.CreateTime.Format(helper.Layout_y_m_d_time) + "</td><td>" + topic.EditTime.Format(helper.Layout_y_m_d_time) + "</td>"
-		html += `<td><button type="button" data-toggle="modal" data-target="#gridSystemModal" class="btn btn-info btn-xs modify">修改</button><button type="button" class="btn btn-warning btn-xs delete-topic">删除</button></td>`
-		html += "</tr>"
+	for _, t := range pageTopics {
+		temp := &topic{}
+		temp.ID = t.ID
+		temp.Title = t.Title
+		temp.TagIDs = t.TagIDs
+		temp.Author = t.Author
+		temp.CategoryID = t.CategoryID
+		temp.CreateTime = t.CreateTime.Format(helper.Layout_y_m_d_time)
+		temp.EditTime = t.EditTime.Format(helper.Layout_y_m_d_time)
+		topics = append(topics, temp)
 	}
-	script += `
-	$('.modify').each(function(i){
-		$(this).on('click',function(){
-			var id = $(this).parent().parent().find('th input').attr('id');
-			if (id==""){pushMessage('info', '对不起|系统错误。');}
-			var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
-			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-			$('#gridModalLabel').text('修改文章');
-			if ($('#selecet-addtopic').length == 0){
-				var cat = $(this).parent().parent().find('.category').text();
-        		var resp = get('post', location.pathname, {flag:'category',selected:cat}, false);
-        		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-        		$('#gridModalLabel').append(resp.Data);
-      		}
-			resp = get('post', location.pathname, {flag:"editor"}, false);
-      		var html = '<div class="row">'+ resp.Data +'</div>';
-      		$('.modal-body .container-fluid').html(html);
-      		resp = get('post', location.pathname, {flag:'modify', id:id}, false);
-      		$('#editor-title').attr('value',resp.Data.Title);
-      		$('#editor-area').text(resp.Data.Content);
-      		$('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="changemodifytopic" class="btn btn-primary">Save changes</button>');
-      		$('#changemodifytopic').on('click', function(){
-        		var title = $('#editor-title').val();
-        		var content = $('#editor-area').val();
-        		var category = $('#selecet-addtopic').val();
-        		if (title == "" || content == ""){
-          			pushMessage('info', '错误|请填写完整。');
-          			return;
-        		}
-        		var resp = get('post', location.pathname, {flag:'domodifytopic',title:title,content:content, cat:category, tags: tags.toString()}, false);
-        		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-        		location.reload();
-        	});
-		});
-	});
-	$('.delete-topic').on('click', function(){
-		var id = $(this).parent().parent().find('th input').attr('id');
-		if (id==""){pushMessage('info', '对不起|系统错误。');return;}
-		if (!confirm('确定要删除该文章吗？')){return;}
-		var resp = get('post', location.pathname, {flag:'deletetopic', id:id}, false);
-		if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-		location.reload();
-	});	
-	</script>`
-	resp.Data = html + script
+	Map["Topics"] = topics
+	topicsT.Execute(&buffer, Map)
+	resp.Data = buffer.String()
 }
 func (this *TopicsController) addTopic(resp *helper.Response) {
 	title := this.GetString("title")
@@ -225,90 +197,67 @@ func (this *TopicsController) getTopic(resp *helper.Response) {
 	}
 }
 func (this *TopicsController) doModify(resp *helper.Response) {
-
+	id, err := this.GetInt32("id")
+	if err != nil {
+		resp.Status = RS.RS_failed
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|ID格式不正确。"}
+		return
+	}
+	title := this.GetString("title")
+	content := this.GetString("content")
+	categoryID := this.GetString("cat")
+	tags := this.GetString("tags")
+	if title == "" || content == "" || categoryID == "" || tags == "" {
+		resp.Status = RS.RS_failed
+		resp.Tips(helper.WARNING, RS.RS_params_error)
+		return
+	}
+	if t := models.TMgr.GetTopic(id); t == nil {
+		resp.Status = RS.RS_failed
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统查找不到该文章ID。"}
+		return
+	} else {
+		t.Title = title
+		t.Content = []rune(content)
+		t.CategoryID = categoryID
+		t.TagIDs = strings.Split(tags, ",")
+	}
+	resp.Success()
 }
+
+type selectCat struct {
+	ID         string
+	IsSelected bool
+}
+
 func (this *TopicsController) category(resp *helper.Response) {
-	var html string
-	html += `
-	<h6><div id='newtopic-tag'>
-	</div></h6>
-	<div class="btn-group choose-tag">
-	  <button type="button" id="choose-tag" class="btn btn-default btn-success" aria-haspopup="true" aria-expanded="false">
-	    选择TAG <span class="caret"></span>
-	  </button>
-	  <div class="dropdown-menu" id="dropdown-tag" style="width:240px;">
-	  </div>
-	</div>
-	<select id="selecet-addtopic" class="form-control" style="width:auto">
-	`
+	categoryT := beego.BeeTemplates["manage/topic/category.html"]
+	var buffer bytes.Buffer
+	var selectCats []*selectCat
 	selected := this.GetString("selected")
 	for _, cat := range models.Blogger.Categories {
 		if cat.IsCategory {
+			temp := &selectCat{}
+			temp.ID = cat.ID
 			if cat.ID != "" && cat.ID == selected {
-				html += "<option selected value='" + cat.ID + "'>" + cat.ID + "</option>"
-			} else {
-				html += "<option value='" + cat.ID + "'>" + cat.ID + "</option>"
+				temp.IsSelected = true
 			}
+			selectCats = append(selectCats, temp)
 		}
 	}
-	html += `</select>
-	<script>
-	  	$("#choose-tag").on('click', function(){
-	  		if($("#dropdown-tag").is(":hidden")){
-	  			$('#dropdown-tag').fadeIn();
-	  			var resp = get('post', location.pathname, {flag:'tag'}, false);
-	  			if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-	  			$("#dropdown-tag").html(resp.Data);
-	  		}else{
-	  			$('#dropdown-tag').fadeOut();
-	  		}
-		});
-		var tags = new Array();
-		function removetag(e){
-			var parent = e.parentElement;
-			var tag = parent.innerText.substring(0,parent.innerText.length-1);
-			tags.remove(tag);
-			parent.remove();
-		};
-	 </script>`
-	resp.Data = html
+	err := categoryT.Execute(&buffer, map[string][]*selectCat{"Categories": selectCats})
+	log.Error(err)
+	resp.Data = buffer.String()
 }
 func (this *TopicsController) tag(resp *helper.Response) {
-	var html string = `
-		<div class="input-group input-group-sm" style="margin-bottom:2px;">
-	     		<input type="text" class="form-control" id='tag-content' placeholder="Add a tag">
-	     		<span class="input-group-btn">
-	       			<button class="btn btn-default" id='add-tag' type="button">Add</button>
-	     		</span>
-	   	</div><!-- /input-group -->`
+	var html string
 	for _, tag := range models.Blogger.Tags {
 		html += tag.TagStyle()
 	}
-	script := `<script>
-		$('#dropdown-tag span.label').each(function(i){
-			$(this).on('click', function(){
-				var tag = $(this).text();
-				console.log(tag);
-				if (tags.indexOf(tag) != -1){
-					return;
-				}
-				tags.push(tag);
-				var classname = $(this).attr('class')
-				var html = '<span class="'+ classname +'">'+ tag +'<span aria-hidden="true" class="remove-tag" onclick="removetag(this);">×</span></span>';
-				$('#newtopic-tag').append(html);
-			});
-		});
-		$('#add-tag').on('click', function(){
-			var tag = $('#tag-content').val();
-			if (tag == ''){
-				pushMessage('info', '错误|你需要填写新tag。');
-				return;
-			}
-			tags.push(tag);
-			$('#newtopic-tag').append('<span class="label label-primary">'+ tag +'<span aria-hidden="true" class="remove-tag" onclick="removetag(this);">×</span></span>');
-		});
-	</script>`
-	resp.Data = html + script
+	tagsT := beego.BeeTemplates["manage/topic/tags.html"]
+	var buffer bytes.Buffer
+	tagsT.Execute(&buffer, map[string]string{"Content": html})
+	resp.Data = buffer.String()
 }
 func (this *TopicsController) doDeleteTopic(resp *helper.Response) {
 	id, err := this.GetInt("id")

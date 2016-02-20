@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"bytes"
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
+	// "io/ioutil"
+	// "net/http"
 	"strconv"
 
 	"github.com/astaxie/beego"
@@ -71,34 +71,11 @@ func (this *TopicController) Topic() {
 		return
 	}
 	this.Data["Title"] = topic.Title + " - " + models.Blogger.BlogName
-	Map["Comment"] = "暂无评论"
-	url := fmt.Sprintf(DUOSHUO_COMMENT_NUM_URL, "deepzz", 1)
-	request, err := http.NewRequest("GET", url, nil)
-	if err == nil {
-		client := http.Client{}
-		response, err := client.Do(request)
-		if err == nil {
-			defer response.Body.Close()
-			body, err := ioutil.ReadAll(response.Body)
-			if err == nil {
-				duoshuo := duoshuoResponse{}
-				err := json.Unmarshal(body, &duoshuo)
-				if err != nil {
-					log.Error(err)
-				}
-				log.Debugf("%#v", duoshuo)
-				for _, v := range duoshuo.Response {
-					if v.Comments > 0 {
-						Map["Comment"] = fmt.Sprintf("%d条评论", v.Comments)
-					}
-				}
-			}
-		}
-	}
 	Map["Url"] = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
 	Map["Title"] = topic.Title
 	Map["Time"] = topic.CreateTime.Format(helper.Layout_y_m_d2)
 	Map["Category"] = "<a " + topic.PCategory.Node.Children[0].Extra + "' rel='category tag'>" + topic.PCategory.Node.Children[0].Text + "</a>"
+	Map["Tags"] = ""
 	for i, tag := range topic.PTags {
 		if i == 0 {
 			Map["Tags"] += "<a " + tag.Node.Extra + " rel='tag'>" + tag.Node.Text + "</a>"
@@ -110,6 +87,7 @@ func (this *TopicController) Topic() {
 	topicT := beego.BeeTemplates["topicTemplate.html"]
 	var buff bytes.Buffer
 	topicT.Execute(&buff, Map)
-	this.Data["Content"] = fmt.Sprintf("%s", buff.Bytes())
+	log.Debugf("%#v", buff.String())
+	this.Data["Content"] = buff.String()
 
 }

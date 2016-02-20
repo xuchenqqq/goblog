@@ -33,7 +33,7 @@ func (this *UserController) Post() {
 	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 func (this *UserController) userInfo(resp *helper.Response) {
-	infoT := beego.BeeTemplates["manage/user.html"]
+	infoT := beego.BeeTemplates["manage/user/user.html"]
 	Map := make(map[string]string)
 	Map["BlogName"] = models.Blogger.BlogName
 	Map["Icon"] = models.Blogger.HeadIcon
@@ -51,44 +51,10 @@ func (this *UserController) userInfo(resp *helper.Response) {
 	resp.Data = fmt.Sprintf("%s", string(buffer.Bytes()))
 }
 func (this *UserController) modifyPasswd(resp *helper.Response) {
-	resp.Data = `
-<form class="form-horizontal">
-  <div class="form-group">
-    <label for="inputPasswd" class="col-sm-2 control-label">原密码</label>
-    <div class="col-sm-10">
-      <input type="password" class="form-control" id="inputPasswd" placeholder="Orgin Password">
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="inputNewPasswd" class="col-sm-2 control-label">新密码</label>
-    <div class="col-sm-10">
-      <input type="password" class="form-control" id="inputNewPasswd" placeholder="New password">
-    </div>
-  </div>
-  <div class="form-group">
-    <label for="inputNewPasswd2" class="col-sm-2 control-label">再次确认</label>
-    <div class="col-sm-10">
-      <input type="password" class="form-control" id="inputNewPasswd2" placeholder="Input Again">
-    </div>
-  </div>
-</form>
-<script>
-  $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="changepasswd" class="btn btn-primary">Save changes</button>');
-  $('#changepasswd').on('click', function(){
-  	var originP = $('#inputPasswd').val();
-	var newP = $('#inputNewPasswd').val();
-	var againP = $('#inputNewPasswd2').val();
-	if (newP!=againP||originP==""||newP==""||againP==""){
-		pushMessage("info", "错误|请检查输入是否正确。");
-		return;
-	}
-	var resp = get('post', "/admin/user", {flag:'domodpasswd', old:originP, new:newP}, false);
-    if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-    pushMessage(resp.Data.Level, resp.Data.Msg);
-    $(".modal-footer [data-dismiss='modal']").trigger("click");
-  });	
-</script>
-`
+	modifypasswdT := beego.BeeTemplates["manage/user/modifypasswd.html"]
+	var buffer bytes.Buffer
+	modifypasswdT.Execute(&buffer, nil)
+	resp.Data = buffer.String()
 }
 func (this *UserController) doModifyInfo(resp *helper.Response) {
 	if blogname := this.GetString("blogname"); blogname != "" {

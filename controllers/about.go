@@ -22,7 +22,9 @@ func (this *AboutController) Get() {
 }
 
 func (this *AboutController) Post() {
-	this.About()
+	resp := helper.NewResponse()
+	resp.Data = cache.Cache.AboutContent // markdown
+	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 
 func (this *AboutController) Content() {
@@ -30,10 +32,4 @@ func (this *AboutController) Content() {
 	var buffer bytes.Buffer
 	aboutT.Execute(&buffer, map[string]string{"Title": "关于博主", "Url": this.domain + "/about"})
 	this.Data["Content"] = fmt.Sprintf("%s", buffer.Bytes())
-}
-
-func (this *AboutController) About() {
-	resp := helper.NewResponse()
-	resp.Data = cache.Cache.AboutContent // markdown
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }

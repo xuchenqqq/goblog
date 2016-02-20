@@ -241,13 +241,21 @@ em{
     padding-top:10px;
 }
 /*left-bar*/
-.left-bar{
-  border-right: 1px solid #eee;
-  width:15%;
-  min-width: 100px;
-  height: auto;
-  float: left;
-  padding: 4px;
+@media (min-width: 768px){
+  .left-bar{
+    border-right: 1px solid #eee;
+    width:15%;
+    min-width: 100px;
+    height: auto;
+    float: left;
+    display: block;
+    padding: 4px;
+  }
+}
+@media (min-width: 468px){
+  .left-bar{
+    /*display: none;*/
+  }
 }
 .tq { 
     margin-top: 10px;
@@ -308,7 +316,6 @@ a {
     text-decoration: none;
 }
 /*right-content*/
-    /*border-bottom: 1px solid #efefef;*/
 .right-content{
   /*margin: 10px;*/
   padding: 5px;
@@ -371,6 +378,11 @@ a {
 b, strong {
     font-weight: inherit;
 }
+/*style*/
+.fa-comments{
+  color: #dd4814;
+}
+
 /*首页*/
 /*友情连接*/
 .blogroll{
@@ -485,7 +497,7 @@ b, strong {
 .BlogAnchor {
     /*background: #f4f7f9;*/
     padding: 10px;
-    line-height: 180%;
+    line-height: 50%;
 }
 .BlogAnchor p {
     font-size: 18px;
@@ -494,6 +506,9 @@ b, strong {
 }
 .BlogAnchor .AnchorContent {
     padding: 5px 0px;
+}
+.AnchorContent{
+  display: none;
 }
 .BlogAnchor li{
     text-indent: 20px;
@@ -558,11 +573,3 @@ b, strong {
 .remove-tag:hover{
   color: white;
 }
-/*@media (min-width:500px){
-  #add-topic-selecet{
-    width: 100px;
-    position: absolute;
-    right: 20px;
-    top: 10px;
-  }
-}*/

@@ -1,0 +1,18 @@
+<div class="row">
+	<textarea class="form-control" id="social-content" rows="20">
+		{{.Content}}
+	</textarea>
+</div>
+<script>
+$('#gridModalLabel').text('修改分类');
+$('#social-content').text(JSONFormat($('#social-content').val()));
+$('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="modifysocial" class="btn btn-primary">Save changes</button>');
+$('#modifysocial').on('click',function(){
+	var content = $('#social-content').val();
+	if (content==""){pushMessage('warning', '错误|请填写完整。');return;}
+	var resp = get('post', location.pathname, {flag:'domodify',json:content},false);
+	console.log(resp)
+	if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+	location.reload();
+});
+</script>

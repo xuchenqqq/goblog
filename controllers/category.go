@@ -33,14 +33,12 @@ func (this *CategoryController) ListTopic() {
 	}
 	Map["Name"] = name
 	Map["Url"] = fmt.Sprintf("%s/cat/%s", this.domain, category.ID)
-
 	pageStr := this.Ctx.Input.Param(":page")
 	page := 1
 	if temp, err := strconv.Atoi(pageStr); err == nil {
 		page = temp
 	}
 	topics, remainpage := models.TMgr.GetTopicsByCatgory(cat, page)
-	log.Debugf("%d,%d", len(topics), remainpage)
 	if remainpage == -1 {
 		Map["ClassOlder"] = "disabled"
 		Map["UrlOlder"] = "#"
