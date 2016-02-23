@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/deepzz/beego_goblog/models/manage"
-	"github.com/deepzz/com/log"
+	"github.com/deepzz0/go-common/log"
+	"github.com/deepzz0/goblog/models/manage"
 )
 
 type cache struct {

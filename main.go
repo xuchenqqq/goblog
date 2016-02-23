@@ -4,7 +4,7 @@ import (
 	"flag"
 
 	"github.com/astaxie/beego"
-	_ "github.com/deepzz/beego_goblog/routers"
+	_ "github.com/deepzz0/goblog/routers"
 )
 
 var runmode string

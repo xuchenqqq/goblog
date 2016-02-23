@@ -8,7 +8,7 @@ cp -a views tmp/views && \
 cp -a conf tmp/conf && \
 cp -a static tmp/static && \
 cp Dockerfile tmp/ && \
-cp beego_goblog tmp/ && \
+cp goblog tmp/ && \
 cd tmp && \
 
 # docker -H tcp://127.0.0.1:2375 build -t gameserver .

@@ -3,11 +3,11 @@ package background
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/deepzz/beego_goblog/RS"
-	"github.com/deepzz/beego_goblog/cache"
-	"github.com/deepzz/beego_goblog/helper"
-	// "github.com/deepzz/beego_goblog/models"
-	// "github.com/deepzz/com/log"
+	"github.com/deepzz0/goblog/RS"
+	"github.com/deepzz0/goblog/cache"
+	"github.com/deepzz0/goblog/helper"
+	// "github.com/deepzz0/goblog/models"
+	// "github.com/deepzz0/go-common/log"
 )
 
 var sessionname = beego.AppConfig.String("sessionname")

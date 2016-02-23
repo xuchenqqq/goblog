@@ -7,7 +7,7 @@ RUN apt-get install -y ca-certificates
 ADD views /goblog/views
 ADD conf /goblog/conf
 ADD static /goblog/static
-ADD beego_goblog /goblog/goblog
+ADD goblog /goblog/goblog
 RUN ["cp","/usr/share/zoneinfo/Asia/Shanghai","/etc/localtime"]
 
 EXPOSE 80

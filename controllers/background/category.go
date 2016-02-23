@@ -7,11 +7,11 @@ import (
 	"sort"
 
 	"github.com/astaxie/beego"
-	"github.com/deepzz/beego_goblog/RS"
-	"github.com/deepzz/beego_goblog/helper"
-	"github.com/deepzz/beego_goblog/models"
-	"github.com/deepzz/com/log"
-	// db "github.com/deepzz/com/mongo"
+	"github.com/deepzz0/go-common/log"
+	"github.com/deepzz0/goblog/RS"
+	"github.com/deepzz0/goblog/helper"
+	"github.com/deepzz0/goblog/models"
+	// db "github.com/deepzz0/go-common/mongo"
 )
 
 type CategoryController struct {

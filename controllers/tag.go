@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/astaxie/beego"
-	"github.com/deepzz/beego_goblog/models"
-	// "github.com/deepzz/com/log"
-	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz0/goblog/models"
+	// "github.com/deepzz0/go-common/log"
+	"github.com/deepzz0/goblog/helper"
 )
 
 type TagController struct {

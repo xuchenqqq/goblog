@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego"
-	"github.com/deepzz/beego_goblog/controllers"
-	"github.com/deepzz/beego_goblog/controllers/background"
+	"github.com/deepzz0/goblog/controllers"
+	"github.com/deepzz0/goblog/controllers/background"
 )
 
 func init() {

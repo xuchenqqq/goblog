@@ -7,9 +7,9 @@ import (
 	// "sort"
 
 	"github.com/astaxie/beego"
-	// "github.com/deepzz/beego_goblog/RS"
-	"github.com/deepzz/beego_goblog/models"
-	// "github.com/deepzz/com/log"
+	// "github.com/deepzz0/goblog/RS"
+	"github.com/deepzz0/goblog/models"
+	// "github.com/deepzz0/go-common/log"
 )
 
 type MessageController struct {

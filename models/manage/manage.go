@@ -1,7 +1,7 @@
 package admin
 
 import (
-	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz0/goblog/helper"
 )
 
 type Leftbar struct {

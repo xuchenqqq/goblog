@@ -4,9 +4,9 @@ import (
 	"bytes"
 
 	"github.com/astaxie/beego"
-	"github.com/deepzz/beego_goblog/RS"
-	"github.com/deepzz/beego_goblog/helper"
-	"github.com/deepzz/beego_goblog/models"
+	"github.com/deepzz0/goblog/RS"
+	"github.com/deepzz0/goblog/helper"
+	"github.com/deepzz0/goblog/models"
 )
 
 type UserController struct {
