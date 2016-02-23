@@ -2,16 +2,13 @@ package controllers
 
 import (
 	"bytes"
-	// "encoding/json"
 	"fmt"
-	// "io/ioutil"
-	// "net/http"
 	"strconv"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
-	"github.com/smalltree0/com/log"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
+	// "github.com/deepzz/com/log"
 )
 
 const (
@@ -40,21 +37,6 @@ func (this *TopicController) Post() {
 		}
 	}
 	resp.WriteJson(this.Ctx.ResponseWriter)
-}
-
-type duoshuoResponse struct {
-	Response map[string]struct {
-		Thread_id   int         `json:"thread_id"`
-		Channel_key interface{} `json:"channel_key"`
-		Thread_key  string      `json:"thread_key"`
-		Reposts     int         `json:"reposts"`
-		Views       int         `json:"views"`
-		Likes       int         `json:"likes"`
-		Dislikes    int         `json:"dislikes"`
-		Comments    int         `json:"comments"`
-	} `json:"response"`
-	Options interface{} `json:"options"`
-	Code    int         `json:"code"`
 }
 
 func (this *TopicController) Topic() {
@@ -87,7 +69,6 @@ func (this *TopicController) Topic() {
 	topicT := beego.BeeTemplates["topicTemplate.html"]
 	var buff bytes.Buffer
 	topicT.Execute(&buff, Map)
-	log.Debugf("%#v", buff.String())
 	this.Data["Content"] = buff.String()
 
 }

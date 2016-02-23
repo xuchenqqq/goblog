@@ -7,10 +7,10 @@ import (
 	"sort"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
-	"github.com/smalltree0/com/log"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
+	"github.com/deepzz/com/log"
 )
 
 type SocialController struct {
@@ -89,8 +89,7 @@ func (this *SocialController) getSocials(resp *helper.Response) {
 		temp.Time = s.CreateTime.Format(helper.Layout_y_m_d_time)
 		socials = append(socials, temp)
 	}
-	err := socialsT.Execute(&buffer, map[string]interface{}{"Socials": socials})
-	log.Error(err)
+	socialsT.Execute(&buffer, map[string]interface{}{"Socials": socials})
 	resp.Data = buffer.String()
 }
 func (this *SocialController) getSocial(resp *helper.Response) {

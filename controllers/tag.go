@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/models"
-	// "github.com/smalltree0/com/log"
-	"github.com/smalltree0/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
+	// "github.com/deepzz/com/log"
+	"github.com/deepzz/beego_goblog/helper"
 )
 
 type TagController struct {
@@ -84,5 +84,5 @@ func (this *TagController) ListTopic() {
 	}
 	groupT.Execute(&buff, Map)
 	this.Data["Title"] = tagName + " - " + models.Blogger.BlogName
-	this.Data["Content"] = fmt.Sprintf("%s", buff.Bytes())
+	this.Data["Content"] = buff.String()
 }

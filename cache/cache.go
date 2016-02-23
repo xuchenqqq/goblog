@@ -5,14 +5,13 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/smalltree0/beego_goblog/models/manage"
-	"github.com/smalltree0/com/log"
+	"github.com/deepzz/beego_goblog/models/manage"
+	"github.com/deepzz/com/log"
 )
 
 type cache struct {
 	BackgroundLeftBar  map[string]string
 	BackgroundLeftBars []*admin.Leftbar
-	AboutContent       string
 }
 
 var Cache = NewCache()
@@ -23,7 +22,6 @@ func NewCache() *cache {
 
 func init() {
 	doReadBackLeftBarConfig()
-	doAboutContent()
 }
 
 func doReadBackLeftBarConfig() {
@@ -45,17 +43,4 @@ func doReadBackLeftBarConfig() {
 			Cache.BackgroundLeftBar[v.ID] = v.ID
 		}
 	}
-}
-
-func doAboutContent() {
-	path, _ := os.Getwd()
-	f, err := os.Open(path + "/conf/about.md")
-	if err != nil {
-		log.Fatal(err)
-	}
-	b, err := ioutil.ReadAll(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	Cache.AboutContent = string(b)
 }

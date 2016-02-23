@@ -22,13 +22,13 @@
   $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="changepasswd" class="btn btn-primary">Save changes</button>');
   $('#changepasswd').on('click', function(){
   	var originP = $('#inputPasswd').val();
-	var newP = $('#inputNewPasswd').val();
-	var againP = $('#inputNewPasswd2').val();
-	if (newP!=againP||originP==""||newP==""||againP==""){
-		pushMessage("info", "错误|请检查输入是否正确。");
-		return;
-	}
-	var resp = get('post', "/admin/user", {flag:'domodpasswd', old:originP, new:newP}, false);
+	  var newP = $('#inputNewPasswd').val();
+	  var againP = $('#inputNewPasswd2').val();
+	  if (newP!=againP||originP==""||newP==""||againP==""){
+		  pushMessage("info", "错误|请检查输入是否正确。");
+		  return;
+	  }
+	  var resp = get('post', "/admin/user", {flag:'domodpasswd', old:originP, new:newP}, false);
     if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
     pushMessage(resp.Data.Level, resp.Data.Msg);
     $(".modal-footer [data-dismiss='modal']").trigger("click");

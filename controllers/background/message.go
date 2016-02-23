@@ -7,9 +7,9 @@ import (
 	// "sort"
 
 	"github.com/astaxie/beego"
-	// "github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/models"
-	// "github.com/smalltree0/com/log"
+	// "github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/models"
+	// "github.com/deepzz/com/log"
 )
 
 type MessageController struct {
@@ -26,6 +26,6 @@ func (this *MessageController) Get() {
 func (this *MessageController) Content() {
 	catT := beego.BeeTemplates["manage/message.html"]
 	var buffer bytes.Buffer
-	catT.Execute(&buffer, map[string]string{"ID": "99999", "Url": beego.AppConfig.String("mydomain") + "/message"})
+	catT.Execute(&buffer, map[string]string{"ID": "99999", "Url": this.domain + "/message"})
 	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
 }

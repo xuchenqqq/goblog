@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/smalltree0/beego_goblog/RS"
-	// "github.com/smalltree0/com/log"
-	"github.com/smalltree0/com/monitor"
+	"github.com/deepzz/beego_goblog/RS"
+	// "github.com/deepzz/com/log"
+	"github.com/deepzz/com/monitor"
 )
 
 const (

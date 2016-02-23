@@ -38,7 +38,7 @@ $(function(){
             siginIn();
         }
     };
-    $("#login").on("click", function(){
+    $("#login").one("click", function(){
         siginIn();
     });
     // 搜索

@@ -14,7 +14,7 @@
             </div>
             <div class="post-content post-expect">
               <p>
-                {{.Preview}}
+                <div class="preview">{{.Preview}}</div>
                 <a href="{{.Url}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
               </p>
             </div>
@@ -37,6 +37,14 @@
       </ul>
     </nav>
   </div>
+  <script>
+  $("div.preview").each(function(){
+    $(this).html(marked($(this).text()));
+      $('pre code').each(function(i, block) {
+         hljs.highlightBlock(block);
+      });
+  });
+  </script>
   <div class="col-md-3 col-xs-2">
     <h3 class="tq">最新评论</h3>
     <!-- 多说最新评论 start -->

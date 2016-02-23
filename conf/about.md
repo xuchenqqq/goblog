@@ -44,7 +44,7 @@ $$	x = \dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a} $$
 | Phone     |   12 USD |  12  |
 | Pipe      |    1 USD | 234  |
 
-### 流程图
+### 流程
 ```flow
 st=>start: Start
 e=>end

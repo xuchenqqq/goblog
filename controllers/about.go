@@ -5,9 +5,8 @@ import (
 	"fmt"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/cache"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
 )
 
 type AboutController struct {
@@ -23,7 +22,11 @@ func (this *AboutController) Get() {
 
 func (this *AboutController) Post() {
 	resp := helper.NewResponse()
-	resp.Data = cache.Cache.AboutContent // markdown
+	if about := models.TMgr.GetTopic(1); about != nil {
+		resp.Data = string(about.Content)
+	} else {
+		resp.Data = "博主真懒。"
+	}
 	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 

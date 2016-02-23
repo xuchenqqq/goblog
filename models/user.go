@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/com/log"
-	db "github.com/smalltree0/com/mongo"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/com/log"
+	db "github.com/deepzz/com/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -173,7 +173,7 @@ func (u *User) DelCatgoryByID(id string) int {
 func (u *User) ReduceCategoryCount(id string) {
 	category := u.GetCategoryByID(id)
 	if category != nil {
-		category.reduCount()
+		category.reduceCount()
 	}
 }
 func (u *User) AddCategoryCount(id string) {
@@ -181,6 +181,7 @@ func (u *User) AddCategoryCount(id string) {
 }
 func (u *User) DelTagByID(id string) int {
 	if u.GetTagByID(id) != nil {
+		delete(TMgr.GroupByTag, id)
 		delete(u.Tags, id)
 		return RS.RS_success
 	}
@@ -188,8 +189,12 @@ func (u *User) DelTagByID(id string) int {
 }
 func (u *User) ReduceTagCount(id string) {
 	tag := u.GetTagByID(id)
-	if tag.reduCount(); tag.Count <= 0 {
-		delete(u.Tags, id)
+	if tag != nil {
+		tag.reduceCount()
+		if tag.Count <= 0 {
+			delete(TMgr.GroupByTag, id)
+			delete(u.Tags, id)
+		}
 	}
 }
 func (u *User) GetTagByID(id string) *Tag {
@@ -298,7 +303,7 @@ func (t *Tag) addCount() {
 	t.Count++
 	t.DoClass()
 }
-func (t *Tag) reduCount() {
+func (t *Tag) reduceCount() {
 	t.Count--
 	t.DoClass()
 }
@@ -330,7 +335,7 @@ func NewCategory() *Category {
 func (c *Category) addCount() {
 	c.Count++
 }
-func (c *Category) reduCount() {
+func (c *Category) reduceCount() {
 	c.Count--
 }
 

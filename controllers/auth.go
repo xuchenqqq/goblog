@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
 )
 
 type AuthController struct {
@@ -37,6 +37,7 @@ func (this *AuthController) Post() {
 		resp.Status = code
 		resp.Tips(helper.WARNING, code)
 	} else {
+		models.Blogger.LoginIp = this.Ctx.Request.RemoteAddr
 		this.SetSession(sessionname, username)
 		resp.Data = "/admin/data"
 	}

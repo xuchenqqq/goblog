@@ -7,10 +7,10 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
-	"github.com/smalltree0/com/log"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
+	"github.com/deepzz/com/log"
 )
 
 type TopicsController struct {
@@ -89,7 +89,6 @@ func (this *TopicsController) getTopics(resp *helper.Response) {
 	var remainpage int
 	if cat == "" || cat == "0" {
 		pageTopics, remainpage = models.TMgr.GetTopicsByPage(page)
-		log.Debugf("%s,%s", page, remainpage)
 		if remainpage == -1 {
 			resp.Data = "<script>$('#previous').addClass('disabled');$('#next').addClass('disabled');pushMessage('info','莫得数据得嘛|是不是页码错了。')</script>"
 			return
@@ -146,7 +145,15 @@ func (this *TopicsController) addTopic(resp *helper.Response) {
 		return
 	}
 	topic := models.NewTopic()
-	topic.Title = title
+	if strings.HasSuffix(title, "TAG:aboutme") {
+		topic.ID = 1
+		topic.Title = strings.Split(title, "-")[0]
+	} else {
+		if topic.ID == 1 {
+			topic.ID = models.NextVal()
+		}
+		topic.Title = title
+	}
 	topic.Content = []rune(content)
 	if category := models.Blogger.GetCategoryByID(cat); category == nil {
 		resp.Status = RS.RS_failed
@@ -155,9 +162,11 @@ func (this *TopicsController) addTopic(resp *helper.Response) {
 	} else {
 		topic.CategoryID = category.ID
 	}
-	sliceTags := strings.Split(tags, ",")
-	for _, tag := range sliceTags {
-		if tag != "" {
+	if tags == "" {
+		topic.TagIDs = make([]string, 0)
+	} else {
+		sliceTags := strings.Split(tags, ",")
+		for _, tag := range sliceTags {
 			topic.TagIDs = append(topic.TagIDs, tag)
 		}
 	}
@@ -192,6 +201,7 @@ func (this *TopicsController) getTopic(resp *helper.Response) {
 		mt.Title = topic.Title
 		mt.Content = string(topic.Content)
 		mt.Tags = topic.TagIDs
+		log.Debugf("%#v", topic.TagIDs)
 		mt.Category = topic.CategoryID
 		resp.Data = mt
 	}
@@ -206,8 +216,8 @@ func (this *TopicsController) doModify(resp *helper.Response) {
 	title := this.GetString("title")
 	content := this.GetString("content")
 	categoryID := this.GetString("cat")
-	tags := this.GetString("tags")
-	if title == "" || content == "" || categoryID == "" || tags == "" {
+	tagIDs := this.GetString("tags")
+	if title == "" || content == "" || categoryID == "" {
 		resp.Status = RS.RS_failed
 		resp.Tips(helper.WARNING, RS.RS_params_error)
 		return
@@ -219,8 +229,11 @@ func (this *TopicsController) doModify(resp *helper.Response) {
 	} else {
 		t.Title = title
 		t.Content = []rune(content)
-		t.CategoryID = categoryID
-		t.TagIDs = strings.Split(tags, ",")
+		if err := models.TMgr.ModTopic(t, categoryID, tagIDs); err != nil {
+			resp.Status = RS.RS_failed
+			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
+			return
+		}
 	}
 	resp.Success()
 }
@@ -245,8 +258,7 @@ func (this *TopicsController) category(resp *helper.Response) {
 			selectCats = append(selectCats, temp)
 		}
 	}
-	err := categoryT.Execute(&buffer, map[string][]*selectCat{"Categories": selectCats})
-	log.Error(err)
+	categoryT.Execute(&buffer, map[string][]*selectCat{"Categories": selectCats})
 	resp.Data = buffer.String()
 }
 func (this *TopicsController) tag(resp *helper.Response) {

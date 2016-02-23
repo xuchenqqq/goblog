@@ -4,13 +4,14 @@ import (
 	"fmt"
 	// "reflect"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/com/log"
-	db "github.com/smalltree0/com/mongo"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/com/log"
+	db "github.com/deepzz/com/mongo"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -40,7 +41,10 @@ type TopicMgr struct {
 }
 
 func NewTopic() *Topic {
-	return &Topic{ID: db.NextVal(C_TOPIC_ID), CreateTime: time.Now(), EditTime: time.Now(), Author: Blogger.UserName}
+	return &Topic{ID: NextVal(), CreateTime: time.Now(), EditTime: time.Now(), Author: Blogger.UserName}
+}
+func NextVal() int32 {
+	return db.NextVal(C_TOPIC_ID)
 }
 
 type INT32 []int32
@@ -70,18 +74,19 @@ func (m *TopicMgr) loadTopics() {
 	length := len(topics)
 	m.IDs = make([]int32, 0, length)
 	for _, topic := range topics {
-		if category := Blogger.GetCategoryByID(topic.CategoryID); category != nil {
-			topic.PCategory = category
-			m.GroupByCategory[topic.CategoryID] = append(m.GroupByCategory[topic.CategoryID], topic)
-		} else {
-			topic.CategoryID = ""
+		category := Blogger.GetCategoryByID(topic.CategoryID)
+		if category != nil {
+			topic.CategoryID = "default"
+			category = Blogger.GetCategoryByID(topic.CategoryID)
 		}
-		for _, id := range topic.TagIDs {
+		topic.PCategory = category
+		m.GroupByCategory[topic.CategoryID] = append(m.GroupByCategory[topic.CategoryID], topic)
+		for i, id := range topic.TagIDs {
 			if tag := Blogger.GetTagByID(id); tag != nil {
 				topic.PTags = append(topic.PTags, tag)
 				m.GroupByTag[id] = append(m.GroupByTag[id], topic)
-				// } else {
-				// 	topic.TagIDs = append(topic.TagIDs[:i], topic.TagIDs[i+1:]...)
+			} else {
+				topic.TagIDs = append(topic.TagIDs[:i], topic.TagIDs[i+1:]...)
 			}
 		}
 		m.Topics[topic.ID] = topic
@@ -180,16 +185,15 @@ func getPage(length int) int {
 func (m *TopicMgr) AddTopic(topic *Topic, domain string) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	m.Topics[topic.ID] = topic
-	m.IDs = append(m.IDs, topic.ID)
-	if category := Blogger.GetCategoryByID(topic.CategoryID); category != nil {
-		m.GroupByCategory[topic.CategoryID] = append(m.GroupByCategory[topic.CategoryID], topic)
-		sort.Sort(m.GroupByCategory[topic.CategoryID])
-		topic.PCategory = category
-		category.addCount()
-	} else {
-		topic.CategoryID = ""
+	category := Blogger.GetCategoryByID(topic.CategoryID)
+	if category == nil {
+		topic.CategoryID = "default"
+		category = Blogger.GetCategoryByID(topic.CategoryID)
 	}
+	m.GroupByCategory[topic.CategoryID] = append(m.GroupByCategory[topic.CategoryID], topic)
+	sort.Sort(m.GroupByCategory[topic.CategoryID])
+	topic.PCategory = category
+	category.addCount()
 	for _, id := range topic.TagIDs {
 		if tag := Blogger.GetTagByID(id); tag != nil {
 			m.GroupByTag[id] = append(m.GroupByTag[id], topic)
@@ -198,7 +202,7 @@ func (m *TopicMgr) AddTopic(topic *Topic, domain string) error {
 		} else {
 			newtag := NewTag()
 			newtag.ID = id
-			newtag.Node = &helper.Node{Type: "a", Extra: fmt.Sprintf("href='%s/tag/%s'", domain, id), Text: id}
+			newtag.Node = &helper.Node{Type: "a", Extra: fmt.Sprintf("href='/tag/%s'", id), Text: id}
 			newtag.addCount()
 			Blogger.Tags[id] = newtag
 			m.GroupByTag[id] = append(m.GroupByTag[id], topic)
@@ -206,8 +210,81 @@ func (m *TopicMgr) AddTopic(topic *Topic, domain string) error {
 			topic.PTags = append(topic.PTags, newtag)
 		}
 	}
+	m.Topics[topic.ID] = topic
+	m.IDs = append(m.IDs, topic.ID)
 	sort.Sort(m.IDs)
 	return db.Insert(DB, C_TOPIC, topic)
+}
+
+func (m *TopicMgr) CategoryGroupDeleteTopic(topic *Topic) {
+	topics := m.GroupByCategory[topic.CategoryID]
+	for i, t := range topics {
+		if t != nil && t == topic {
+			Blogger.ReduceCategoryCount(topic.CategoryID)
+			if m.GroupByCategory[topic.CategoryID] != nil {
+				m.GroupByCategory[topic.CategoryID] = append(m.GroupByCategory[topic.CategoryID][:i], m.GroupByCategory[topic.CategoryID][i+1:]...)
+			}
+		}
+	}
+}
+
+func (m *TopicMgr) TagGroupDeleteTopic(id string, topic *Topic) {
+	topics := m.GroupByTag[id]
+	for i, t := range topics {
+		if t != nil && t == topic {
+			Blogger.ReduceTagCount(id)
+			if m.GroupByTag[id] != nil {
+				m.GroupByTag[id] = append(m.GroupByTag[id][:i], m.GroupByTag[id][i+1:]...)
+			}
+		}
+	}
+}
+
+func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+	if topic.CategoryID != catgoryID {
+		m.CategoryGroupDeleteTopic(topic)
+		category := Blogger.GetCategoryByID(catgoryID)
+		if category != nil {
+			topic.CategoryID = "default"
+			category = Blogger.GetCategoryByID(catgoryID)
+		}
+		topic.CategoryID = catgoryID
+		topic.PCategory = category
+		m.GroupByCategory[catgoryID] = append(m.GroupByCategory[catgoryID], topic)
+		sort.Sort(m.GroupByCategory[catgoryID])
+		category.addCount()
+	}
+	if tags == "" {
+		topic.TagIDs = make([]string, 0)
+		topic.PTags = make([]*Tag, 0)
+	} else {
+		tagIDS := strings.Split(tags, ",")
+		for _, id := range topic.TagIDs {
+			m.TagGroupDeleteTopic(id, topic)
+		}
+		topic.TagIDs = make([]string, 0, len(tagIDS))
+		topic.PTags = make([]*Tag, 0, len(tagIDS))
+		for _, id := range tagIDS {
+			topic.TagIDs = append(topic.TagIDs, id)
+			if tag := Blogger.GetTagByID(id); tag != nil {
+				topic.PTags = append(topic.PTags, tag)
+				tag.addCount()
+				m.GroupByTag[id] = append(m.GroupByTag[id], topic)
+			} else {
+				newtag := NewTag()
+				newtag.ID = id
+				newtag.Node = &helper.Node{Type: "a", Extra: fmt.Sprintf("href='/tag/%s'", id), Text: id}
+				newtag.addCount()
+				Blogger.Tags[id] = newtag
+				m.GroupByTag[id] = append(m.GroupByTag[id], topic)
+				topic.PTags = append(topic.PTags, newtag)
+			}
+			sort.Sort(m.GroupByTag[id])
+		}
+	}
+	return db.Update(DB, C_TOPIC, bson.M{"id": topic.ID}, topic)
 }
 
 func (m *TopicMgr) DelTopic(id int32) error {
@@ -218,22 +295,10 @@ func (m *TopicMgr) DelTopic(id int32) error {
 			return err
 		}
 		if topic.CategoryID != "" {
-			Blogger.ReduceCategoryCount(topic.CategoryID)
-			topics := m.GroupByCategory[topic.CategoryID]
-			for i, t := range topics {
-				if t == topic {
-					m.GroupByCategory[topic.CategoryID] = append(m.GroupByCategory[topic.CategoryID][:i], m.GroupByCategory[topic.CategoryID][i+1:]...)
-				}
-			}
+			m.CategoryGroupDeleteTopic(topic)
 		}
 		for _, id := range topic.TagIDs {
-			Blogger.ReduceTagCount(id)
-			topics := m.GroupByTag[id]
-			for i, t := range topics {
-				if t == topic {
-					m.GroupByTag[id] = append(m.GroupByTag[id][:i], m.GroupByTag[id][i+1:]...)
-				}
-			}
+			m.TagGroupDeleteTopic(id, topic)
 		}
 		for i, id := range m.IDs {
 			if id == topic.ID {
@@ -244,4 +309,14 @@ func (m *TopicMgr) DelTopic(id int32) error {
 		return nil
 	}
 	return fmt.Errorf("Topic id=%d not found in cache.", id)
+}
+
+// -----------------------------------------------------------------
+func IsHaveTag(id string, ids []string) bool {
+	for _, v := range ids {
+		if v == id {
+			return true
+		}
+	}
+	return false
 }

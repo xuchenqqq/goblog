@@ -1,15 +1,11 @@
 package controllers
 
 import (
-	// "encoding/json"
-	// "fmt"
 	"time"
 
 	"github.com/astaxie/beego"
-	// "github.com/smalltree0/beego_goblog/RS"
-	// "github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
-	// "github.com/smalltree0/com/log"
+	"github.com/deepzz/beego_goblog/models"
+	"github.com/deepzz/com/log"
 )
 
 var sessionname = beego.AppConfig.String("sessionname")
@@ -23,6 +19,10 @@ type BaseController struct {
 func (this *BaseController) Prepare() {
 	this.url = this.Ctx.Request.URL.String()
 	this.domain = beego.AppConfig.String("mydomain")
+	if beego.BConfig.RunMode == beego.DEV {
+		this.domain = this.domain + ":" + beego.AppConfig.String("httpport")
+	}
+	log.Debugf("%s", this.domain)
 }
 func (this *BaseController) Leftbar(cat string) {
 	var html string

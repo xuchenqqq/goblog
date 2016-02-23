@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/controllers"
-	"github.com/smalltree0/beego_goblog/controllers/background"
+	"github.com/deepzz/beego_goblog/controllers"
+	"github.com/deepzz/beego_goblog/controllers/background"
 )
 
 func init() {
@@ -13,14 +13,13 @@ func init() {
 	beego.BConfig.WebConfig.Session.SessionName = "SESSIONID"
 	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600
 	beego.BConfig.WebConfig.Session.SessionGCMaxLifetime = 3600
-	beego.AppConfig.DefaultString("mydomain", "http://deepzz.com")
 
 	beego.Router("/", &controllers.HomeController{})
 	beego.Router("/p/:page([0-9]+)", &controllers.HomeController{})
 	beego.Router("/cat/:cat([a-zA-Z]+)", &controllers.CategoryController{})
 	beego.Router("/cat/:cat([a-zA-Z]+)/p/:page([0-9]+)", &controllers.CategoryController{})
-	beego.Router("/tag/:tag([a-zA-Z0-9]+)", &controllers.TagController{})
-	beego.Router("/tag/:tag([a-zA-Z0-9]+)/p/:page([0-9]+)", &controllers.TagController{})
+	beego.Router("/tag/:tag([a-zA-Z0-9\u4e00-\u9fa5]+)", &controllers.TagController{})
+	beego.Router("/tag/:tag([a-zA-Z0-9\u4e00-\u9fa5]+)/p/:page([0-9]+)", &controllers.TagController{})
 	beego.Router("/:year([0-9]{4})/:month([0-9]{2})/:day([0-9]{2})/:id([0-9]+).html", &controllers.TopicController{})
 	beego.Router("/message", &controllers.MessageController{})
 	beego.Router("/about", &controllers.AboutController{})
@@ -28,7 +27,7 @@ func init() {
 	beego.ErrorHandler("404", HTTPNotFound)
 
 	// admin
-	// beego.InsertFilter("/admin/*", beego.BeforeRouter, background.FilterUser)
+	beego.InsertFilter("/admin/*", beego.BeforeRouter, background.FilterUser)
 	beego.Router("/admin/user", &background.UserController{})
 	beego.Router("/admin/data", &background.DataAnalyseController{})
 	beego.Router("/admin/topics", &background.TopicsController{})

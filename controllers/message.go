@@ -2,10 +2,9 @@ package controllers
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/models"
+	"github.com/deepzz/beego_goblog/models"
 )
 
 type MessageController struct {
@@ -24,7 +23,7 @@ func (this *MessageController) Content() {
 	var buffer bytes.Buffer
 	content := `
 	<div class="post-content">
-	<p><a href="javascript:;"><img class＝"img-responsive img-rounded" src="/static/message.jpg"><img></a></p>
+	<p><a href="javascript:;"><img class＝"img-responsive img-rounded" src="http://7xokm2.com1.z0.glb.clouddn.com/img/message/message.jpg"><img></a></p>
 	<p>非常感谢你关注我的博客，如果你想联系我，可以通过下面的联系方式。</p>
 	<p><a class="btn btn-sm btn-primary" href="mailto:chenqijing2@qq.com" target="_blank"><i class="fa fa-qq"></i>QQ邮箱</a><a class="btn btn-sm btn-primary" href="mailto:chenqijing2@163.com" target="_blank"><i class="fa fa-envelope-o"></i>网易邮箱</a></p>
 	<p>当然，如果你有新浪微博或者腾讯微博的话，也可以在上面给我留言。</p>
@@ -36,5 +35,5 @@ func (this *MessageController) Content() {
 	Map["Url"] = this.domain + "/message"
 	Map["Content"] = content
 	messageT.Execute(&buffer, Map)
-	this.Data["Content"] = fmt.Sprintf("%s", buffer.Bytes())
+	this.Data["Content"] = buffer.String()
 }

@@ -17,4 +17,4 @@ VOLUME ["/goblog/log"]
 
 WORKDIR /goblog
 # CMD ["/goblog/goblog"]
-ENTRYPOINT ["./goblog"]
+ENTRYPOINT ["./goblog", "-m", "prod"] 

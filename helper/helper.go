@@ -12,7 +12,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/smalltree0/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/RS"
 )
 
 // var Mydomain = "http://deepzz.com"

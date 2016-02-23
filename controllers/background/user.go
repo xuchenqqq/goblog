@@ -2,12 +2,11 @@ package background
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/astaxie/beego"
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/helper"
-	"github.com/smalltree0/beego_goblog/models"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/helper"
+	"github.com/deepzz/beego_goblog/models"
 )
 
 type UserController struct {
@@ -48,7 +47,7 @@ func (this *UserController) userInfo(resp *helper.Response) {
 
 	var buffer bytes.Buffer
 	infoT.Execute(&buffer, Map)
-	resp.Data = fmt.Sprintf("%s", string(buffer.Bytes()))
+	resp.Data = buffer.String()
 }
 func (this *UserController) modifyPasswd(resp *helper.Response) {
 	modifypasswdT := beego.BeeTemplates["manage/user/modifypasswd.html"]

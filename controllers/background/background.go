@@ -3,11 +3,11 @@ package background
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/smalltree0/beego_goblog/RS"
-	"github.com/smalltree0/beego_goblog/cache"
-	"github.com/smalltree0/beego_goblog/helper"
-	// "github.com/smalltree0/beego_goblog/models"
-	"github.com/smalltree0/com/log"
+	"github.com/deepzz/beego_goblog/RS"
+	"github.com/deepzz/beego_goblog/cache"
+	"github.com/deepzz/beego_goblog/helper"
+	// "github.com/deepzz/beego_goblog/models"
+	// "github.com/deepzz/com/log"
 )
 
 var sessionname = beego.AppConfig.String("sessionname")
@@ -22,6 +22,9 @@ type BackgroundController struct {
 func (this *BackgroundController) Prepare() {
 	this.url = this.Ctx.Request.URL.String()
 	this.domain = beego.AppConfig.String("mydomain")
+	if beego.BConfig.RunMode == beego.DEV {
+		this.domain = this.domain + ":" + beego.AppConfig.String("httpport")
+	}
 }
 func (this *BackgroundController) LeftBar(index string) {
 	var html string
@@ -41,7 +44,6 @@ func (this *BackgroundController) LeftBar(index string) {
 // ----------------------------- 过滤登录 -----------------------------
 var FilterUser = func(ctx *context.Context) {
 	val, ok := ctx.Input.Session(sessionname).(string)
-	log.Debugf("login=%s", val)
 	if !ok || val == "" {
 		if ctx.Request.Method == "GET" {
 			ctx.Redirect(302, "/login")
