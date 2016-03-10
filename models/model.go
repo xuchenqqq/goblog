@@ -24,7 +24,7 @@ func init() {
 	// 以下三句保证调用顺序
 	UMgr.loadUsers()
 	Blogger = UMgr.Get("deepzz")
-	if Blogger == nil {
+	if Blogger == nil { // 从配置初始化用户
 		path, _ := os.Getwd()
 		f, err := os.Open(path + "/conf/backup/user.json")
 		if err != nil {
