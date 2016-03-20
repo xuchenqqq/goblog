@@ -1,7 +1,7 @@
 package models
 
 import (
-	"fmt"
+	// "fmt"
 	// "sort"
 	// "strings"
 	"sort"
@@ -76,9 +76,6 @@ func (m *UserMgr) loadUsers() {
 	}
 	log.Debug(len(users))
 	for _, u := range users {
-		for _, t := range u.Tags {
-			t.DoClass()
-		}
 		m.Users[u.UserName] = u
 	}
 }
@@ -151,6 +148,15 @@ func (u *User) GetCategoryByID(id string) *Category {
 		}
 	}
 	return nil
+}
+func (u *User) GetValidCategory() []*Category {
+	var temps []*Category
+	for _, v := range u.Categories {
+		if v.IsCat {
+			temps = append(temps, v)
+		}
+	}
+	return temps
 }
 func (u *User) AddCategory(cat *Category) int {
 	if u.GetCategoryByID(cat.ID) == nil {
@@ -283,29 +289,21 @@ var TagStyle = map[int]string{
 }
 
 type Tag struct {
-	ID    string
-	Count int
-	Node  *helper.Node
+	ID    string // 内部ID
+	Count int    // 数量
+	Extra string // 链接
+	Text  string // 显示名称
 }
 
 func NewTag() *Tag {
 	return &Tag{}
 }
-func (t *Tag) DoClass() {
-	if t.Count < 23 {
-		t.Node.Class = "tag-link-" + fmt.Sprint(t.Count)
-	} else {
-		t.Node.Class = "tag-link-" + fmt.Sprint(22)
-	}
-	// t.Nod.Extra = fmt.Sprintf("title='%d topic'", t.Num)
-}
+
 func (t *Tag) addCount() {
 	t.Count++
-	t.DoClass()
 }
 func (t *Tag) reduceCount() {
 	t.Count--
-	t.DoClass()
 }
 func (t *Tag) TagStyle() string {
 	rand := helper.GetRand()
@@ -321,12 +319,14 @@ func (sc SortCategory) Less(i, j int) bool { return sc[i].SortID < sc[j].SortID 
 func (sc SortCategory) Swap(i, j int)      { sc[i], sc[j] = sc[j], sc[i] }
 
 type Category struct {
-	ID         string
-	Count      int
-	IsCategory bool
-	SortID     int
-	CreateTime time.Time
-	Node       *helper.Node
+	ID         string    // 内部ID
+	Count      int       // 文章数量
+	IsCat      bool      // 是否分类
+	SortID     int       // 排序ID
+	Title      string    // 显示说明
+	Extra      string    // 链接地址
+	Text       string    // 显示名称
+	CreateTime time.Time // 创建时间
 }
 
 func NewCategory() *Category {
@@ -347,10 +347,12 @@ func (ss SortSocial) Less(i, j int) bool { return ss[i].SortID < ss[j].SortID }
 func (ss SortSocial) Swap(i, j int)      { ss[i], ss[j] = ss[j], ss[i] }
 
 type Social struct {
-	ID         string
-	SortID     int
-	CreateTime time.Time
-	Node       *helper.Node
+	ID         string    // 内部ID
+	SortID     int       // 排序ID
+	Title      string    // 显示说明
+	Extra      string    // 链接地址
+	Icon       string    // icon
+	CreateTime time.Time // 创建时间
 }
 
 func NewSocial() *Social {
@@ -365,10 +367,12 @@ func (sb SortBlogroll) Less(i, j int) bool { return sb[i].SortID < sb[j].SortID 
 func (sb SortBlogroll) Swap(i, j int)      { sb[i], sb[j] = sb[j], sb[i] }
 
 type Blogroll struct {
-	ID         string
-	SortID     int
-	CreateTime time.Time
-	Node       *helper.Node
+	ID         string    // 内部ID
+	SortID     int       // 排序ID
+	Title      string    // 显示说明
+	Extra      string    // 链接
+	Text       string    // 显示名称
+	CreateTime time.Time // 创建时间
 }
 
 func NewBlogroll() *Blogroll {

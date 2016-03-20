@@ -12,33 +12,23 @@ import (
 
 var sessionname = beego.AppConfig.String("sessionname")
 
-type BackgroundController struct {
+type Common struct {
 	beego.Controller
 	index  string
 	domain string
 	url    string
 }
 
-func (this *BackgroundController) Prepare() {
+func (this *Common) Prepare() {
 	this.url = this.Ctx.Request.URL.String()
 	this.domain = beego.AppConfig.String("mydomain")
 	if beego.BConfig.RunMode == beego.DEV {
 		this.domain = this.domain + ":" + beego.AppConfig.String("httpport")
 	}
 }
-func (this *BackgroundController) LeftBar(index string) {
-	var html string
-	for _, node := range cache.Cache.BackgroundLeftBars {
-		if node.ID != "" {
-			if node.ID == index {
-				node.Node.Class = "active"
-			} else {
-				node.Node.Class = ""
-			}
-		}
-		html += node.Node.String()
-	}
-	this.Data["LeftBar"] = html
+func (this *Common) LeftBar(index string) {
+	this.Data["Choose"] = index
+	this.Data["LeftBar"] = cache.Cache.BackgroundLeftBars
 }
 
 // ----------------------------- 过滤登录 -----------------------------

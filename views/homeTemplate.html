@@ -7,23 +7,33 @@
       {{range .ListTopics}}
         <div class="row">
           <div class="col-md-12 post-container">
-            <h3 class="post-title"><a href="{{.Url}}" rel="bookmark">{{.Title}}</a></h3>
+            <h3 class="post-title"><a href="{{.URL}}" rel="bookmark">{{.Title}}</a></h3>
             <div class="meta-box">
               <span class="m-post-date"><i class="fa fa-calendar"></i>{{.Time}}</span>
-              <span class="comments-link"><i class="fa fa-comments"></i><a href="{{.Url}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"> </a></span>
+              <span class="comments-link"><i class="fa fa-comments"></i><a href="{{.URL}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"> </a></span>
             </div>
             <div class="post-content post-expect">
               <p>
                 <div class="preview">{{.Preview}}</div>
-                <a href="{{.Url}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
+                <a href="{{.URL}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
               </p>
             </div>
             <div class="meta-box">
               <span class="cat-links"><i class="fa fa-reorder"></i><b>分类:</b>
-                {{str2html .Category}}
+                {{with .PCategory}}
+                  <a href="{{.Extra}}" rel='category tag'>{{.Text}}</a>
+                {{end}}
               </span>
               <span class="tag-links"><i class="fa fa-tags"></i><b>标签:</b>
-                {{str2html .Tags}}
+                {{range $index, $elem := .PTags}}
+                  {{range .}}
+                    {{if eq $index 0}}
+                      <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">{{.Text}}</a>
+                    {{else}}
+                      <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">,{{.Text}}</a>
+                    {{end}}
+                  {{end}}
+                {{end}}
               </span>
             </div>
           </div>
@@ -37,14 +47,6 @@
       </ul>
     </nav>
   </div>
-  <script>
-  $("div.preview").each(function(){
-    $(this).html(marked($(this).text()));
-      $('pre code').each(function(i, block) {
-         hljs.highlightBlock(block);
-      });
-  });
-  </script>
   <div class="col-md-3 col-xs-2">
     <h3 class="tq">最新评论</h3>
     <!-- 多说最新评论 start -->
@@ -65,12 +67,20 @@
     <h3 class="tq">云标签</h3>
     <div class="tagcloud">
     <!-- <a href="http://hessian.cn/tag/4741" class="tag-link-10">4741</a> -->
-    {{str2html .TagCloud}}
-  </div>
-  <h3 class="tq">友情连接</h3>
+      {{range .Tags}}
+        {{if lt .Count 23}}
+          <a class="tag-link-{{.}}" href="{{.Extra}}" title="{{.Count}} topic">{{.Text}}</a>
+        {{else}}
+          <a class="tag-link-22" href="{{.Extra}}" title="{{.Count}} topic">{{.Text}}</a>
+        {{end}}
+      {{end}}
+    </div>
+    <h3 class="tq">友情连接</h3>
     <ul class="blogroll">
       <!-- <li><a href="http://songda.me" title="好哥们宋达的博客" target="_blank">SongDa's Blog</a></li> -->
-      {{str2html .Blogroll}}
+      {{range .Blogrolls}}
+        <li><a href="{{.Extra}}" target="_blank" title="{{.Title}}">{{.Text}}</a></li>
+      {{end}}
     </ul>
   </div>
 </div>

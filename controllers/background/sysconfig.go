@@ -1,5 +1,9 @@
 package background
 
 type SysconfigController struct {
-	BackgroundController
+	Common
+}
+
+type DataBackupRecover struct {
+	Common
 }

@@ -60,14 +60,6 @@
   <script type="text/javascript" src="/static/js/jquery-1.11.3.min.js"></script>
   <script type="text/javascript" src="/static/js/marked.min.js"></script>
   <script type="text/javascript" src="/static/js/blog.js"></script>
-  <!--loading-->
-  <div class="preloader">
-    <div id="status">
-      <p class="center-text">Loading the content...
-      <em>Loading depends on your connection speed!</em>
-    </p></div>
-  </div>
-  <!--loading end-->
   <div class="loginBox">
     <h2>后台登录|<small>Goblog 管理中心</small></h2>
     <form class="form-horizontal">
@@ -90,6 +82,29 @@
       </div>
     </form>
   </div>
-  <p class="copyright"><a href="{{.Url}}" target="_blank">返回首页</a> &copy; 2016 Powered by <a href="{{.Url}}" target="_blank">{{.Name}}</a></p>
+  <p class="copyright"><a href="{{.URL}}" target="_blank">返回首页</a> &copy; 2016 Powered by <a href="{{.URL}}" target="_blank">{{.Name}}</a></p>
+  <script type="text/javascript">
+    $("#login").on("click", function(){
+      console.log("enter login")
+      siginIn();
+    });
+    function siginIn(){
+      username = $("#login-name").val();
+      password = $("#login-passwd").val();
+      if (username == "" || password == ""){
+          pushMessage(config.INFO, "参数错误|请补充完整！");
+          return
+      }
+      var resp = get("post", "/login", {username:username,password:password},false);
+      if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+      pushMessage(config.SUCCESS, "登录成功|即将跳转到管理面板！")
+      setTimeout(function(){location.assign(resp.Data);},600);
+    }
+    document.onkeydown = function (e) {
+        if (e.keyCode == 13 &&location.pathname=="/login"){
+            siginIn();
+        }
+    };
+  </script>
 </body>
 </html>

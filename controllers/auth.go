@@ -7,7 +7,7 @@ import (
 )
 
 type AuthController struct {
-	BaseController
+	Common
 }
 
 func (this *AuthController) Get() {
@@ -16,11 +16,12 @@ func (this *AuthController) Get() {
 	}
 	this.TplName = "login.html"
 	this.Data["Name"] = models.Blogger.BlogName
-	this.Data["Url"] = this.domain
+	this.Data["URL"] = this.domain
 }
 
 func (this *AuthController) Post() {
 	resp := helper.NewResponse()
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
 	username := this.GetString("username")
 	password := this.GetString("password")
 
@@ -41,5 +42,4 @@ func (this *AuthController) Post() {
 		this.SetSession(sessionname, username)
 		resp.Data = "/admin/data"
 	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }

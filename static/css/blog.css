@@ -540,7 +540,7 @@ b, strong {
 }
 /*editor 添加文章*/
 @media (min-width:768px){
-  #selecet-addtopic{
+  #selecetCategory{
     width: 90px;
     position: absolute;
     right: 50px;
@@ -548,28 +548,28 @@ b, strong {
   }
 }
 @media (min-width:768px) {
-  .choose-tag{
+  .chooseTag{
     position: absolute;
-    right: 153px;
+    right: 131px;
     top: 10px;
   }
 }
-.choose-tag .dropdown-menu{
+.chooseTag .dropdown-menu{
   padding: 5px 5px;
 }
-.choose-tag .dropdown-menu span, #newtopic-tag span{
+.chooseTag .dropdown-menu span, #newTag span{
   cursor: pointer;
 
 }
-#newtopic-tag{
+#newTag{
   position: absolute;
   left: 15px;
 }
-.remove-tag{
+.removeTag{
   font-size:14px;
   color:#808080;
   margin-left:4px;
 }
-.remove-tag:hover{
+.removeTag:hover{
   color: white;
 }

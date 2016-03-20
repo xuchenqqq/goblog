@@ -40,25 +40,67 @@
 <script src="http://7xokm2.com1.z0.glb.clouddn.com/js/marked.min.js"></script>
 <script src="http://7xokm2.com1.z0.glb.clouddn.com/js/highlight.pack.js"></script>
 <!--loading-->
-<div class="preloader">
+<!-- <div class="preloader">
   <div id="status">
     <p class="center-text">Loading the content...
     <em>Loading depends on your connection speed!</em>
   </p></div>
-</div>
+</div> -->
 <!--loading end-->
 
 <!-- content start -->
 <div class="left-bar">
-  {{template "leftbarTemplate.html" .}}
+  <div class="top-section">
+    <div class="profile-image">
+      <img src="{{.Picture}}" class="img-responsive img-rounded img-circle" alt="logo image">
+    </div>
+    <h4 class="profile-title">{{.BlogName}}</h4>
+    <p class="profile-description">{{.Introduce}}</p>
+  </div>
+  <div class="input-group">
+    <input type="text" class="form-control" id="search-content" placeholder="Search for...">
+    <span class="input-group-btn">
+      <button class="btn btn-default" type="button" id="btn-search"><span class="fa fa-search" aria-hidden="true"></span></button>
+    </span>
+  </div><!-- /input-group -->
+  <ul class="nav nav-stacked" id="nav-category">
+    <!-- <li><a href="/cat/framework">程序框架</a></li> -->
+    {{range .Categories}}
+      {{if eq $.Choose .ID}}
+        <li class="active"><a href="{{.Extra}}" target="_self" title="{{.Title}}">{{.Text}}</a></li>
+      {{else if .Extra}}
+        <li><a href="{{.Extra}}" target="_self" title="{{.Title}}">{{.Text}}</a></li>
+      {{else}}
+        <li class="tq">{{.Text}}</li>
+      {{end}}
+    {{end}}
+  </ul>
+  <div class="social-icons">
+    <ul>
+      {{range .Socials}}
+        <li><a href="{{.Extra}}" target="_blank"><i class="{{.Icon}}"></i></a></li>
+      {{end}}
+    </ul>
+  </div>
+  <p class="site-copyright">© Copyright 2016 - {{.CopyTime}} <a href="{{.Domain}}" title="Deepzz">{{.BlogName}}</a></p>
 </div>
 <div class="right-content">
   <div class="container-fluid bs-docs-container" id="content">
-    {{str2html .Content}}
+    {{.LayoutContent}}
   </div>
 </div>
 <!-- content end -->
 <script src="http://7xokm2.com1.z0.glb.clouddn.com/js/bootstrap.min.js"></script>
 <script src="/static/js/blog.js"></script>
+<script type="text/javascript">
+  $('#btn-search').on('click', function(){
+    var content = $('#search-content').val();
+    if (content == ""){
+      pushMessage('info', "sorry|请输入你搜索的标题。")
+      return;
+    }
+    location.href="/search?title=" + content;
+  });
+</script>
 </body>
 </html>

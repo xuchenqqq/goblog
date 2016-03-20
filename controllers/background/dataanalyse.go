@@ -1,11 +1,11 @@
 package background
 
 type DataAnalyseController struct {
-	BackgroundController
+	Common
 }
 
 func (this *DataAnalyseController) Get() {
-	this.TplName = "manage/adminTemplate.html"
+	this.TplName = "manage/adminlayout.html"
 	this.LeftBar("data")
 	this.Data["Content"] = ""
 }

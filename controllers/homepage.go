@@ -1,40 +1,39 @@
 package controllers
 
 import (
+	// "bytes"
 	"fmt"
 	"strconv"
 
-	// "github.com/deepzz0/go-common/log"
+	// "github.com/astaxie/beego"
+	"github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/goblog/helper"
 	"github.com/deepzz0/goblog/models"
 )
 
-type CategoryController struct {
+type HomeController struct {
 	Common
 }
 
-func (this *CategoryController) Get() {
+func (this *HomeController) Get() {
 	this.Layout = "homelayout.html"
-	this.TplName = "groupTemplate.html"
-	this.ListTopic()
+	this.TplName = "homeTemplate.html"
+	this.Data["Title"] = fmt.Sprintf("%s - %s", models.Blogger.Introduce, models.Blogger.BlogName)
+	this.Leftbar("homepage")
+	this.Home()
 }
+func (this *HomeController) Home() {
+	this.Data["Tags"] = models.Blogger.Tags
+	this.Data["Blogrolls"] = models.Blogger.Blogrolls
 
-func (this *CategoryController) ListTopic() {
-	cat := this.Ctx.Input.Param(":cat")
-	this.Leftbar(cat)
-	category := models.Blogger.GetCategoryByID(cat)
-	var name string = "暂无该分类"
-	if category != nil && category.Extra != "" {
-		name = category.Text
-	}
-	this.Data["Name"] = name
-	this.Data["URL"] = fmt.Sprintf("%s/cat/%s", this.domain, category.ID)
-	pageStr := this.Ctx.Input.Param(":page")
+	// 文章列表
 	page := 1
+	pageStr := this.Ctx.Input.Param(":page")
 	if temp, err := strconv.Atoi(pageStr); err == nil {
 		page = temp
 	}
-	topics, remainpage := models.TMgr.GetTopicsByCatgory(cat, page)
+	topics, remainpage := models.TMgr.GetTopicsByPage(page)
+	log.Debugf("page = %d，remainpage=%d	", page, remainpage)
 	if remainpage == -1 {
 		this.Data["ClassOlder"] = "disabled"
 		this.Data["UrlOlder"] = "#"
@@ -46,14 +45,14 @@ func (this *CategoryController) ListTopic() {
 			this.Data["UrlOlder"] = "#"
 		} else {
 			this.Data["ClassOlder"] = ""
-			this.Data["UrlOlder"] = this.domain + "/cat/" + cat + fmt.Sprintf("/p/%d", page-1)
+			this.Data["UrlOlder"] = this.domain + "/p/" + fmt.Sprint(page-1)
 		}
 		if remainpage == 0 {
 			this.Data["ClassNewer"] = "disabled"
 			this.Data["UrlNewer"] = "#"
 		} else {
 			this.Data["ClassNewer"] = ""
-			this.Data["UrlNewer"] = this.domain + "/cat/" + cat + fmt.Sprintf("/p/%d", page+1)
+			this.Data["UrlNewer"] = this.domain + "/p/" + fmt.Sprint(page+1)
 		}
 		var ts []*listOfTopic
 		for _, topic := range topics {
@@ -69,5 +68,4 @@ func (this *CategoryController) ListTopic() {
 		}
 		this.Data["ListTopics"] = ts
 	}
-	this.Data["Title"] = name + " - " + models.Blogger.BlogName
 }

@@ -1,35 +1,31 @@
 package controllers
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 
-	"github.com/astaxie/beego"
 	"github.com/deepzz0/goblog/models"
 	// "github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/goblog/helper"
 )
 
 type TagController struct {
-	BaseController
+	Common
 }
 
 func (this *TagController) Get() {
-	this.TplName = "home.html"
+	this.Layout = "homelayout.html"
+	this.TplName = "groupTemplate.html"
 	this.Leftbar("")
 	this.ListTopic()
 }
 
 func (this *TagController) ListTopic() {
 	tagName := this.Ctx.Input.Param(":tag")
-	groupT := beego.BeeTemplates["groupTemplate.html"]
-	var buff bytes.Buffer
-	Map := make(map[string]interface{})
 	tag := models.Blogger.GetTagByID(tagName)
-	Map["Name"] = "无效TAG"
+	this.Data["Name"] = "无效TAG"
 	if tag != nil {
-		Map["Name"] = tag.ID
+		this.Data["Name"] = tag.ID
 		page := 1
 		tagName := this.Ctx.Input.Param(":tag")
 		pageStr := this.Ctx.Input.Param(":page")
@@ -38,51 +34,39 @@ func (this *TagController) ListTopic() {
 		}
 		topics, remainpage := models.TMgr.GetTopicsByTag(tagName, page)
 		if remainpage == -1 {
-			Map["ClassOlder"] = "disabled"
-			Map["UrlOlder"] = "#"
-			Map["ClassNewer"] = "disabled"
-			Map["UrlNewer"] = "#"
+			this.Data["ClassOlder"] = "disabled"
+			this.Data["UrlOlder"] = "#"
+			this.Data["ClassNewer"] = "disabled"
+			this.Data["UrlNewer"] = "#"
 		} else {
 			if page == 1 {
-				Map["ClassOlder"] = "disabled"
-				Map["UrlOlder"] = "#"
+				this.Data["ClassOlder"] = "disabled"
+				this.Data["UrlOlder"] = "#"
 			} else {
-				Map["ClassOlder"] = ""
-				Map["UrlOlder"] = this.domain + "/tag/" + tagName + fmt.Sprintf("/p/%d", page-1)
+				this.Data["ClassOlder"] = ""
+				this.Data["UrlOlder"] = this.domain + "/tag/" + tagName + fmt.Sprintf("/p/%d", page-1)
 			}
 			if remainpage == 0 {
-				Map["ClassNewer"] = "disabled"
-				Map["UrlNewer"] = "#"
+				this.Data["ClassNewer"] = "disabled"
+				this.Data["UrlNewer"] = "#"
 			} else {
-				Map["ClassNewer"] = ""
-				Map["UrlNewer"] = this.domain + "/tag/" + tagName + fmt.Sprintf("/p/%d", page+1)
+				this.Data["ClassNewer"] = ""
+				this.Data["UrlNewer"] = this.domain + "/tag/" + tagName + fmt.Sprintf("/p/%d", page+1)
 			}
 			var ts []*listOfTopic
 			for _, topic := range topics {
 				t := &listOfTopic{}
 				t.ID = topic.ID
 				t.Time = topic.CreateTime.Format(helper.Layout_y_m_d2)
-				t.Url = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
+				t.URL = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
 				t.Title = topic.Title
-				if len(topic.Content) < 300 {
-					t.Preview = string(topic.Content)
-				} else {
-					t.Preview = string(topic.Content[:300])
-				}
-				t.Category = "<a " + topic.PCategory.Node.Children[0].Extra + " rel='category tag'>" + topic.PCategory.Node.Children[0].Text + "</a>"
-				for i, tag := range topic.PTags {
-					if i == 0 {
-						t.Tags += "<a " + tag.Node.Extra + " rel='tag'>" + tag.Node.Text + "</a>"
-					} else {
-						t.Tags += ",<a " + tag.Node.Extra + " rel='tag'>" + tag.Node.Text + "</a>"
-					}
-				}
+				t.Preview = topic.Preview
+				t.PCategory = topic.PCategory
+				t.PTags = topic.PTags
 				ts = append(ts, t)
 			}
-			Map["ListTopics"] = ts
+			this.Data["ListTopics"] = ts
 		}
 	}
-	groupT.Execute(&buff, Map)
 	this.Data["Title"] = tagName + " - " + models.Blogger.BlogName
-	this.Data["Content"] = buff.String()
 }

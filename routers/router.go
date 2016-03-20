@@ -14,6 +14,8 @@ func init() {
 	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600
 	beego.BConfig.WebConfig.Session.SessionGCMaxLifetime = 3600
 
+	beego.ErrorHandler("404", HTTPNotFound)
+
 	beego.Router("/", &controllers.HomeController{})
 	beego.Router("/p/:page([0-9]+)", &controllers.HomeController{})
 	beego.Router("/cat/:cat([a-zA-Z]+)", &controllers.CategoryController{})
@@ -24,9 +26,9 @@ func init() {
 	beego.Router("/message", &controllers.MessageController{})
 	beego.Router("/about", &controllers.AboutController{})
 	beego.Router("/login", &controllers.AuthController{})
-	beego.ErrorHandler("404", HTTPNotFound)
+	beego.Router("/search", &controllers.SearchController{})
 
-	// admin
+	// // admin
 	beego.InsertFilter("/admin/*", beego.BeforeRouter, background.FilterUser)
 	beego.Router("/admin/user", &background.UserController{})
 	beego.Router("/admin/data", &background.DataAnalyseController{})

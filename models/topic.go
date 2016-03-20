@@ -11,7 +11,6 @@ import (
 	"github.com/deepzz0/go-common/log"
 	db "github.com/deepzz0/go-common/mongo"
 	"github.com/deepzz0/goblog/RS"
-	"github.com/deepzz0/goblog/helper"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -28,6 +27,7 @@ type Topic struct {
 	TagIDs     []string
 	Content    []rune
 
+	Preview   string    `bson:"-"`
 	PCategory *Category `bson:"-"`
 	PTags     []*Tag    `bson:"-"`
 }
@@ -115,6 +115,7 @@ func (m *TopicMgr) UpdateTopics() int {
 func (m *TopicMgr) GetTopic(id int32) *Topic {
 	return m.Topics[id]
 }
+
 func (m *TopicMgr) GetTopicsByPage(page int) ([]*Topic, int) {
 	var ts []*Topic
 	if page <= 0 {
@@ -131,6 +132,7 @@ func (m *TopicMgr) GetTopicsByPage(page int) ([]*Topic, int) {
 	}
 	return ts, -1
 }
+
 func (m *TopicMgr) GetTopicsByCatgory(categoryID string, page int) ([]*Topic, int) {
 	if page <= 0 {
 		return make([]*Topic, 0), -1
@@ -152,6 +154,7 @@ func (m *TopicMgr) GetTopicsByCatgory(categoryID string, page int) ([]*Topic, in
 	}
 	return make([]*Topic, 0), -1
 }
+
 func (m *TopicMgr) GetTopicsByTag(tagID string, page int) ([]*Topic, int) {
 	if page <= 0 {
 		return make([]*Topic, 0), -1
@@ -174,6 +177,17 @@ func (m *TopicMgr) GetTopicsByTag(tagID string, page int) ([]*Topic, int) {
 	}
 	return make([]*Topic, 0), -1
 }
+
+func (m *TopicMgr) GetTopicsSearch(search string) []*Topic {
+	var topics []*Topic
+	for _, v := range m.Topics {
+		if strings.Contains(v.Title, search) {
+			topics = append(topics, v)
+		}
+	}
+	return topics
+}
+
 func getPage(length int) int {
 	page := length / OnePageCount
 	if length%OnePageCount > 0 {
@@ -202,7 +216,7 @@ func (m *TopicMgr) AddTopic(topic *Topic, domain string) error {
 		} else {
 			newtag := NewTag()
 			newtag.ID = id
-			newtag.Node = &helper.Node{Type: "a", Extra: fmt.Sprintf("href='/tag/%s'", id), Text: id}
+			newtag.Extra = "/tag/" + id
 			newtag.addCount()
 			Blogger.Tags[id] = newtag
 			m.GroupByTag[id] = append(m.GroupByTag[id], topic)
@@ -275,7 +289,7 @@ func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 			} else {
 				newtag := NewTag()
 				newtag.ID = id
-				newtag.Node = &helper.Node{Type: "a", Extra: fmt.Sprintf("href='/tag/%s'", id), Text: id}
+				newtag.Extra = "/tag/" + id
 				newtag.addCount()
 				Blogger.Tags[id] = newtag
 				m.GroupByTag[id] = append(m.GroupByTag[id], topic)
