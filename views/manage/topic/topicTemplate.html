@@ -1,21 +1,21 @@
 <form class="form-inline">
   <div class="form-group">
     <div class="btn-group" role="group" style="margin-left: 10px;">   
-      <button type="button" id="newTopic" data-toggle="modal" data-target="#topicsModal" class="btn btn-default btn-info">新增文章</button>
-      <button type="button" id="deleteall" class="btn btn-default btn-danger">批量删除</button>
+      <button type="button" id="newTopic" data-toggle="modal" data-target="#topicsModal" class="btn btn-sm btn-info">新增文章</button>
+      <button type="button" id="deleteall" class="btn btn-sm btn-danger">批量删除</button>
     </div>
   </div>
   <div class="form-group" style="float:right">
     <div class="input-group">
-      <input type="text" class="form-control" style="z-index:0;" placeholder="Search for...">
+      <input type="text" class="form-control input-sm" style="z-index:0;" placeholder="Search for...">
       <span class="input-group-btn">
-        <button class="btn btn-default" id="search" type="button">Go!</button>
+        <button class="btn btn-default btn-sm" id="search" type="button">Go!</button>
             </span>
     </div><!-- /input-group -->
   </div>
   <div class="input-group" style="float: right!important;">
-    <span class="input-group-addon">选择分类</span>
-    <select class="form-control" id="selectCategory" style="width:auto;z-index:0;">
+    <span class="input-group-addon input-sm">选择分类</span>
+    <select class="form-control input-sm" id="selectCategory" style="width:auto;z-index:0;">
       <option value="all">全部</option>
       {{range .Categories}}
         {{if eq $.ChooseCat .ID}}
@@ -77,19 +77,19 @@
           <h4 class="modal-title" id="topicModalLabel"></h4>
           <h6><div id='newTag'></div></h6>
           <div class="btn-group chooseTag">
-            <button type="button" id="choose-tag" class="btn btn-default btn-success" aria-haspopup="true" aria-expanded="false">选择TAG <span class="caret"></span>
+            <button type="button" id="choose-tag" class="btn btn-sm btn-success" aria-haspopup="true" aria-expanded="false">选择TAG <span class="caret"></span>
             </button>
             <div class="dropdown-menu" id="dropdown-tag" style="width:240px;">
               <div class="input-group input-group-sm" style="margin-bottom:2px;">
                 <input type="text" class="form-control" id='tag-content' placeholder="Add a tag">
                 <span class="input-group-btn">
-                    <button class="btn btn-default" id='add-tag' type="button">Add</button>
+                    <button class="btn btn-default btn-sm" id='add-tag' type="button">Add</button>
                 </span>
               </div><!-- /input-group -->
               {{str2html .TagStyle}}
             </div>
           </div>
-          <select id="selecetCategory" class="form-control" style="width:auto">
+          <select id="selecetCategory" class="form-control input-sm">
             {{range .Categories}}
               <option value='{{.ID}}'>{{.Text}}</option>
             {{end}}
@@ -111,7 +111,7 @@
                   <span class="fa fa-arrows-alt" aria-hidden="true"></span>|
                 </div>
                 <textarea id="editor-area" class="form-control"></textarea>
-                <div id="editor-view"></div>
+                <div id="editor-view" class="markdown-body"></div>
               </div>
               <script type="text/javascript" src="/static/js/editor.js"></script>
               <!-- /editor -->
@@ -174,16 +174,17 @@
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
       $("#selecetCategory").find("option[id='"+ resp.Data.Category +"']").attr("selected",true);
       $('#editor-title').val(resp.Data.Title);
-      $('#editor-area').text(resp.Data.Content);
+      $('#editor-area').val(resp.Data.Content);
+      $('#editor-view').text("");
       if (resp.Data.Tags != null){
         for (var i = 0; i < resp.Data.Tags.length; i++){
           var tag = resp.Data.Tags[i]
           console.log(tag)
           tags.push(tag);
           var html = '<span class="label label-primary">'+ tag +'<span aria-hidden="true" class="removeTag" onclick="removetag(this);">×</span></span>';
-          $('#newtopic-tag').append(html);
         }
       }
+      $('#newtopic-tag').append(html);
     });
     $('#saveTopic').on('click', function(){
       var title = $('#editor-title').val();

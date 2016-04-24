@@ -8,6 +8,7 @@ body {
 }
 body, button, input, select, textarea {
     font: 400 1.5em/1.8 Avenir,Microsoft Yahei,Hiragino Sans GB,Microsoft Sans Serif,WenQuanYi Micro Hei,sans-serif;
+    /*font:13px/1.4 Helvetica,arial,nimbussansl,liberationsans,freesans,clean,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";color:#333;background-color:#fff;*/
 }
 html,
 body,
@@ -32,6 +33,7 @@ video {
 }
 pre{
   padding: 0px;
+  border: none;
 }
 .notify-container {
   position: fixed;
@@ -562,7 +564,7 @@ b, strong {
 @media (min-width:768px) {
   .chooseTag{
     position: absolute;
-    right: 131px;
+    right: 140px;
     top: 10px;
   }
 }

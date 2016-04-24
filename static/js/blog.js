@@ -25,9 +25,9 @@ function timer(){
     var now = (new Date()).valueOf();
     if (now - conf.MODIFY_TIME > 600 && now - conf.MODIFY_TIME < 1101){
         $("#highlight-content").html(marked($("#edit-area").val()));
-        $('pre code').each(function(i, block) {
-            hljs.highlightBlock(block);
-        });
+        // $('pre code').each(function(i, block) {
+        //     hljs.highlightBlock(block);
+        // });
     }
 }
 
@@ -138,7 +138,7 @@ function get(method, url, data, async)
             resp = response;
         })
     });
-    console.log(resp,resp.Status==301);
+    console.log(resp);
     if (resp.Status==301){
         pushMessage('primary', '对不起|你暂为登录。');
     }
