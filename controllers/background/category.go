@@ -1,12 +1,9 @@
 package background
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"sort"
 
-	"github.com/astaxie/beego"
 	"github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/goblog/RS"
 	"github.com/deepzz0/goblog/helper"
@@ -15,36 +12,31 @@ import (
 )
 
 type CategoryController struct {
-	BackgroundController
+	Common
 }
 
 func (this *CategoryController) Get() {
-	this.TplName = "manage/adminTemplate.html"
+	this.Layout = "manage/adminlayout.html"
+	this.TplName = "manage/category/categoryTemplate.html"
 	this.Data["Title"] = "分类管理 - " + models.Blogger.BlogName
 	this.LeftBar("category")
 	this.Content()
 }
 func (this *CategoryController) Content() {
-	catT := beego.BeeTemplates["manage/category/categoryTemplate.html"]
-	var buffer bytes.Buffer
-	catT.Execute(&buffer, "")
-	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
+	this.Data["Categories"] = models.Blogger.GetValidCategory()
+	this.Data["Tags"] = models.Blogger.Tags
 }
 
 func (this *CategoryController) Post() {
 	resp := helper.NewResponse()
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
 	flag := this.GetString("flag")
+	log.Debugf("flag = %s", flag)
 	switch flag {
-	case "cat":
-		this.getCategories(resp)
-	case "tag":
-		this.getTag(resp)
-	case "addcategory":
-		this.addCategory(resp)
+	case "save":
+		this.saveCategory(resp)
 	case "modify":
 		this.getCategory(resp)
-	case "domodify":
-		this.doModify(resp)
 	case "deletecat":
 		this.doDeleteCat(resp)
 	case "deletetag":
@@ -53,104 +45,23 @@ func (this *CategoryController) Post() {
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "参数错误|未知的flag标志。"}
 	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 func (this *CategoryController) getCategory(resp *helper.Response) {
 	id := this.GetString("id")
 	if id != "" {
-		modifycategoryT := beego.BeeTemplates["manage/category/modifycategory.html"]
-		var buffer bytes.Buffer
 		if cat := models.Blogger.GetCategoryByID(id); cat != nil {
 			b, _ := json.Marshal(cat)
-			modifycategoryT.Execute(&buffer, map[string]string{"Content": string(b)})
-			resp.Data = buffer.String()
-			return
-		}
-	}
-	resp.Data = ""
-}
-
-type category struct {
-	ID     string
-	SortID int
-	Extra  string
-	Name   string
-	Count  int
-	Time   string
-}
-
-func (this *CategoryController) getCategories(resp *helper.Response) {
-	categoriesT := beego.BeeTemplates["manage/category/categories.html"]
-	var buffer bytes.Buffer
-	var categories []*category
-	for _, cat := range models.Blogger.Categories {
-		if len(cat.Node.Children) > 0 && cat.IsCategory {
-			temp := &category{}
-			temp.ID = cat.ID
-			temp.SortID = cat.SortID
-			temp.Extra = cat.Node.Children[0].Extra
-			temp.Name = cat.Node.Children[0].Text
-			temp.Count = cat.Count
-			temp.Time = cat.CreateTime.Format(helper.Layout_y_m_d_time)
-			categories = append(categories, temp)
-		}
-	}
-	categoriesT.Execute(&buffer, map[string]interface{}{"Categories": categories})
-	resp.Data = buffer.String()
-}
-
-type tag struct {
-	ID    string
-	Extra string
-	Name  string
-	Count int
-}
-
-func (this *CategoryController) getTag(resp *helper.Response) {
-	tagsT := beego.BeeTemplates["manage/category/tags.html"]
-	var buffer bytes.Buffer
-	var tags []*tag
-	for _, t := range models.Blogger.Tags {
-		temp := &tag{}
-		temp.ID = t.ID
-		temp.Extra = t.Node.Extra
-		temp.Name = t.Node.Text
-		temp.Count = t.Count
-		tags = append(tags, temp)
-	}
-	tagsT.Execute(&buffer, map[string]interface{}{"Tags": tags})
-	resp.Data = buffer.String()
-}
-
-func (this *CategoryController) doModify(resp *helper.Response) {
-	content := this.GetString("json")
-	if content != "" {
-		cat := models.Category{}
-		err := json.Unmarshal([]byte(content), &cat)
-		if err != nil {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|反序列化失败。"}
-			return
-		}
-		category := models.Blogger.GetCategoryByID(cat.ID)
-		if category != nil {
-			*category = cat
-			sort.Sort(models.Blogger.Categories)
-		} else {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "索引错误|没有找到该分类。"}
-			return
+			resp.Data = string(b)
 		}
 	} else {
 		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "获取内容失败|你都干了什么。"}
-		return
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|参数错误。"}
 	}
-	resp.Success()
 }
-func (this *CategoryController) addCategory(resp *helper.Response) {
+
+func (this *CategoryController) saveCategory(resp *helper.Response) {
 	content := this.GetString("json")
-	cat := models.NewCategory()
+	var cat models.Category
 	err := json.Unmarshal([]byte(content), &cat)
 	if err != nil {
 		log.Error(err)
@@ -158,10 +69,16 @@ func (this *CategoryController) addCategory(resp *helper.Response) {
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|要仔细检查哦。"}
 		return
 	}
-	if models.Blogger.AddCategory(cat) != RS.RS_success {
+	if cat.ID == "TEST" {
 		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "分类已存在|你确定要添加分类吗？"}
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|请修改你需要添加的分类。"}
 		return
+	}
+	if category := models.Blogger.GetCategoryByID(cat.ID); category != nil {
+		*category = cat
+		sort.Sort(models.Blogger.Categories)
+	} else {
+		models.Blogger.AddCategory(&cat)
 	}
 }
 func (this *CategoryController) doDeleteCat(resp *helper.Response) {

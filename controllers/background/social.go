@@ -1,12 +1,9 @@
 package background
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"sort"
 
-	"github.com/astaxie/beego"
 	"github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/goblog/RS"
 	"github.com/deepzz0/goblog/helper"
@@ -14,124 +11,73 @@ import (
 )
 
 type SocialController struct {
-	BackgroundController
+	Common
 }
 
 func (this *SocialController) Get() {
-	this.TplName = "manage/adminTemplate.html"
+	this.Layout = "manage/adminlayout.html"
+	this.TplName = "manage/social/socialTemplate.html"
 	this.Data["Title"] = "社交工具 - " + models.Blogger.BlogName
 	this.LeftBar("social")
 	this.Content()
 }
 func (this *SocialController) Content() {
-	socialT := beego.BeeTemplates["manage/social/socialTemplate.html"]
-	var buffer bytes.Buffer
-	socialT.Execute(&buffer, "")
-	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
+	this.Data["Socials"] = models.Blogger.Socials
 }
 
 func (this *SocialController) Post() {
 	resp := helper.NewResponse()
-
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
 	flag := this.GetString("flag")
+	log.Debugf("flag = %s", flag)
 	switch flag {
-	case "social":
-		this.getSocials(resp)
-	case "addsocial":
-		this.addSocial(resp)
+	case "save":
+		this.saveSocial(resp)
 	case "modify":
 		this.getSocial(resp)
-	case "domodify":
-		this.doModify(resp)
-	case "deletesocial":
+	case "delete":
 		this.doDelete(resp)
 	default:
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "参数错误|未知的flag标志。"}
 	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }
-func (this *SocialController) addSocial(resp *helper.Response) {
+func (this *SocialController) saveSocial(resp *helper.Response) {
 	content := this.GetString("json")
-	social := models.NewSocial()
-	err := json.Unmarshal([]byte(content), &social)
+	var sc models.Social
+	err := json.Unmarshal([]byte(content), &sc)
 	if err != nil {
 		log.Error(err)
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|要仔细检查哦。"}
 		return
 	}
-	if models.Blogger.AddSocial(social) != RS.RS_success {
+	if sc.ID == "TEST" {
 		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "工具已存在|你确定要添加工具吗？"}
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|请修改你需要添加的社交。"}
 		return
 	}
-}
-
-type social struct {
-	ID     string
-	SortID int
-	Extra  string
-	Class  string
-	Time   string
-}
-
-func (this *SocialController) getSocials(resp *helper.Response) {
-	socialsT := beego.BeeTemplates["manage/social/socials.html"]
-	var buffer bytes.Buffer
-	var socials []*social
-	for _, s := range models.Blogger.Socials {
-		temp := &social{}
-		temp.ID = s.ID
-		temp.SortID = s.SortID
-		temp.Extra = s.Node.Children[0].Extra
-		temp.Class = s.Node.Children[0].Children[0].Class
-		temp.Time = s.CreateTime.Format(helper.Layout_y_m_d_time)
-		socials = append(socials, temp)
+	if social := models.Blogger.GetSocialByID(sc.ID); social != nil {
+		*social = sc
+		sort.Sort(models.Blogger.Socials)
+	} else {
+		models.Blogger.AddSocial(&sc)
 	}
-	socialsT.Execute(&buffer, map[string]interface{}{"Socials": socials})
-	resp.Data = buffer.String()
 }
+
 func (this *SocialController) getSocial(resp *helper.Response) {
 	id := this.GetString("id")
 	if id != "" {
-		modifysocialT := beego.BeeTemplates["manage/social/modifysocial.html"]
-		var buffer bytes.Buffer
 		if social := models.Blogger.GetSocialByID(id); social != nil {
 			b, _ := json.Marshal(social)
-			modifysocialT.Execute(&buffer, map[string]string{"Content": string(b)})
-			resp.Data = buffer.String()
-			return
-		}
-	}
-	resp.Data = ""
-}
-func (this *SocialController) doModify(resp *helper.Response) {
-	content := this.GetString("json")
-	if content != "" {
-		temp := models.Social{}
-		err := json.Unmarshal([]byte(content), &temp)
-		if err != nil {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|反序列化失败。"}
-			return
-		}
-		social := models.Blogger.GetSocialByID(temp.ID)
-		if social != nil {
-			*social = temp
-			sort.Sort(models.Blogger.Socials)
-		} else {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "索引错误|没有找到该工具。"}
-			return
+			resp.Data = string(b)
 		}
 	} else {
 		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "获取内容失败|你都干了什么。"}
-		return
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|参数错误。"}
 	}
-	resp.Success()
 }
+
 func (this *SocialController) doDelete(resp *helper.Response) {
 	id := this.GetString("id")
 	if id == "" {

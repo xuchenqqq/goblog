@@ -1,12 +1,9 @@
 package background
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"sort"
 
-	"github.com/astaxie/beego"
 	"github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/goblog/RS"
 	"github.com/deepzz0/goblog/helper"
@@ -14,125 +11,74 @@ import (
 )
 
 type BlogrollController struct {
-	BackgroundController
+	Common
 }
 
 func (this *BlogrollController) Get() {
-	this.TplName = "manage/adminTemplate.html"
+	this.Layout = "manage/adminlayout.html"
+	this.TplName = "manage/blogroll/blogrollTemplate.html"
 	this.Data["Title"] = "友情链接 - " + models.Blogger.BlogName
 	this.LeftBar("blogroll")
 	this.Content()
 }
 
 func (this *BlogrollController) Content() {
-	blogrollT := beego.BeeTemplates["manage/blogroll/blogrollTemplate.html"]
-	var buffer bytes.Buffer
-	blogrollT.Execute(&buffer, "")
-	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
+	this.Data["Blogrolls"] = models.Blogger.Blogrolls
 }
 
 func (this *BlogrollController) Post() {
 	resp := helper.NewResponse()
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
 	flag := this.GetString("flag")
+	log.Debugf("flag=%s", flag)
 	switch flag {
-	case "blogroll":
-		this.getBlogrolls(resp)
-	case "addblogroll":
-		this.addBlogroll(resp)
+	case "save":
+		this.saveBlogroll(resp)
 	case "modify":
 		this.getBlogroll(resp)
-	case "domodify":
-		this.doModify(resp)
-	case "deleteblogroll":
+	case "delete":
 		this.doDelete(resp)
 	default:
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "参数错误|未知的flag标志。"}
 	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 
-type blogroll struct {
-	ID     string
-	SortID int
-	Extra  string
-	Name   string
-	Time   string
-}
-
-func (this *BlogrollController) getBlogrolls(resp *helper.Response) {
-	var blogrolls []*blogroll
-	for _, br := range models.Blogger.Blogrolls {
-		temp := &blogroll{}
-		temp.ID = br.ID
-		temp.SortID = br.SortID
-		temp.Extra = br.Node.Children[0].Extra
-		temp.Name = br.Node.Children[0].Text
-		temp.Time = br.CreateTime.Format(helper.Layout_y_m_d_time)
-		blogrolls = append(blogrolls, temp)
-	}
-	Map := map[string]interface{}{"Blogrolls": blogrolls}
-	blogrollsT := beego.BeeTemplates["manage/blogroll/blogrolls.html"]
-	var buffer bytes.Buffer
-	blogrollsT.Execute(&buffer, Map)
-	resp.Data = buffer.String()
-}
-func (this *BlogrollController) addBlogroll(resp *helper.Response) {
+func (this *BlogrollController) saveBlogroll(resp *helper.Response) {
 	content := this.GetString("json")
-	blogroll := models.NewBlogroll()
-	err := json.Unmarshal([]byte(content), &blogroll)
+	var br models.Blogroll
+	err := json.Unmarshal([]byte(content), &br)
 	if err != nil {
 		log.Error(err)
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|要仔细检查哦。"}
 		return
 	}
-	if models.Blogger.AddBlogroll(blogroll) != RS.RS_success {
+	if br.ID == "TEST" {
 		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "分类已存在|你确定要添加分类吗？"}
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|请修改你需要添加的工具。"}
 		return
+	}
+	if blogroll := models.Blogger.GetBlogrollByID(br.ID); blogroll != nil {
+		*blogroll = br
+		sort.Sort(models.Blogger.Blogrolls)
+	} else {
+		models.Blogger.AddBlogroll(&br)
 	}
 }
 func (this *BlogrollController) getBlogroll(resp *helper.Response) {
 	id := this.GetString("id")
 	if id != "" {
-		modifyBlogrollT := beego.BeeTemplates["manage/blogroll/modifyblogroll.html"]
-		var buffer bytes.Buffer
 		if br := models.Blogger.GetBlogrollByID(id); br != nil {
 			b, _ := json.Marshal(br)
-			modifyBlogrollT.Execute(&buffer, map[string]string{"Content": string(b)})
-			resp.Data = buffer.String()
-			return
-		}
-	}
-	resp.Data = ""
-}
-func (this *BlogrollController) doModify(resp *helper.Response) {
-	content := this.GetString("json")
-	if content != "" {
-		br := models.Blogroll{}
-		err := json.Unmarshal([]byte(content), &br)
-		if err != nil {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "内容错误|反序列化失败。"}
-			return
-		}
-		blogroll := models.Blogger.GetBlogrollByID(br.ID)
-		if blogroll != nil {
-			*blogroll = br
-			sort.Sort(models.Blogger.Blogrolls)
-		} else {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "索引错误|没有找到该友情链接。"}
-			return
+			resp.Data = string(b)
 		}
 	} else {
 		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "获取内容失败|你都干了什么。"}
-		return
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|参数错误。"}
 	}
-	resp.Success()
 }
+
 func (this *BlogrollController) doDelete(resp *helper.Response) {
 	id := this.GetString("id")
 	if id == "" {

@@ -10,11 +10,12 @@ import (
 )
 
 type UserController struct {
-	BackgroundController
+	Common
 }
 
 func (this *UserController) Post() {
 	resp := helper.NewResponse()
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
 	flag := this.GetString("flag")
 	switch flag {
 	case "info":
@@ -29,7 +30,6 @@ func (this *UserController) Post() {
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "参数错误|未知的flag标志。"}
 	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 func (this *UserController) userInfo(resp *helper.Response) {
 	infoT := beego.BeeTemplates["manage/user/user.html"]

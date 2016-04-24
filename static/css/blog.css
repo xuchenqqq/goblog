@@ -3,9 +3,12 @@ body {
   padding: 0;
   margin: 0;
   height: 100%;
+  color: #555555;
+  font-size: 8px;
 }
 body, button, input, select, textarea {
     font: 400 1.5em/1.8 Avenir,Microsoft Yahei,Hiragino Sans GB,Microsoft Sans Serif,WenQuanYi Micro Hei,sans-serif;
+    /*font:13px/1.4 Helvetica,arial,nimbussansl,liberationsans,freesans,clean,sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol";color:#333;background-color:#fff;*/
 }
 html,
 body,
@@ -30,6 +33,7 @@ video {
 }
 pre{
   padding: 0px;
+  border: none;
 }
 .notify-container {
   position: fixed;
@@ -272,8 +276,8 @@ em{
     background-color: #1ca8dd;
 }
 #nav-category>li > a {
-    color: black;
-    padding: 5px 15px;
+    color: #555555;
+    padding: 4px 15px;
 }
 li {
   list-style: none;
@@ -326,7 +330,7 @@ a {
 /*文章列表*/
 .page-title {
     margin-top: 20px;
-    font-size: 30px;
+    font-size: 20px;
     color: #999;
     margin-bottom: 10px;
     border-bottom: 1px solid #eee;
@@ -383,6 +387,13 @@ b, strong {
   color: #dd4814;
 }
 
+
+/*bootstrap*/
+.pager li>a, .pager li>span{
+  border: none;
+}
+
+
 /*首页*/
 /*友情连接*/
 .blogroll{
@@ -394,13 +405,12 @@ b, strong {
 .blogroll a {
     color: #757575;
     text-decoration: none;
-    font-size: 16px;
-    font-size: 1rem;
+    font-size: 1.3rem;
     outline: none;
 }
 .blogroll a:hover{
   color: black;
-  font-size: 17px;
+  font-size: 12px;
 }
 /*云标签*/
 .tagcloud a:hover{
@@ -531,6 +541,10 @@ b, strong {
 .BlogAnchor a {
     text-decoration: none;
 }
+
+#highlight-content{
+  font-size: 14px;
+}
 /*后台table*/
 .manage-table{
   border: 1px solid #eee;
@@ -540,7 +554,7 @@ b, strong {
 }
 /*editor 添加文章*/
 @media (min-width:768px){
-  #selecet-addtopic{
+  #selecetCategory{
     width: 90px;
     position: absolute;
     right: 50px;
@@ -548,28 +562,28 @@ b, strong {
   }
 }
 @media (min-width:768px) {
-  .choose-tag{
+  .chooseTag{
     position: absolute;
-    right: 153px;
+    right: 140px;
     top: 10px;
   }
 }
-.choose-tag .dropdown-menu{
+.chooseTag .dropdown-menu{
   padding: 5px 5px;
 }
-.choose-tag .dropdown-menu span, #newtopic-tag span{
+.chooseTag .dropdown-menu span, #newTag span{
   cursor: pointer;
 
 }
-#newtopic-tag{
+#newTag{
   position: absolute;
   left: 15px;
 }
-.remove-tag{
+.removeTag{
   font-size:14px;
   color:#808080;
   margin-left:4px;
 }
-.remove-tag:hover{
+.removeTag:hover{
   color: white;
 }

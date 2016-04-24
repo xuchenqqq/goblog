@@ -15,9 +15,12 @@ const (
 	RS_update_failed = 201 // 更新失败
 	RS_create_failed = 202 // 创建失败
 	RS_delete_failed = 203 // 删除失败
+	RS_notin_trash   = 204 // 文章不在垃圾箱
+	RS_undo_falied   = 205 // 撤销删除失败
 
 	RS_user_not_activate = 300 // 用户暂未激活
 	RS_user_not_login    = 301 // 用户没有登录
 
 	RS_tag_exist = 400 // tag已存在
+
 )

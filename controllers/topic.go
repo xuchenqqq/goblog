@@ -1,11 +1,9 @@
 package controllers
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 
-	"github.com/astaxie/beego"
 	"github.com/deepzz0/goblog/helper"
 	"github.com/deepzz0/goblog/models"
 	// "github.com/deepzz0/go-common/log"
@@ -16,17 +14,19 @@ const (
 )
 
 type TopicController struct {
-	BaseController
+	Common
 }
 
 func (this *TopicController) Get() {
-	this.TplName = "home.html"
+	this.Layout = "homelayout.html"
+	this.TplName = "topicTemplate.html"
 	this.Leftbar("")
 	this.Topic()
 }
 
 func (this *TopicController) Post() {
 	resp := helper.NewResponse()
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
 	resp.Data = "文章索引错误."
 	id := this.Ctx.Input.Param(":id")
 	ID, err := strconv.Atoi(id)
@@ -36,39 +36,27 @@ func (this *TopicController) Post() {
 			resp.Data = string(topic.Content)
 		}
 	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
 }
 
 func (this *TopicController) Topic() {
 	id := this.Ctx.Input.Param(":id")
 	ID, err := strconv.Atoi(id)
 	if err != nil {
-		this.Data["Content"] = ""
+		this.Data["IsFalse"] = true
 		return
 	}
-	Map := make(map[string]string)
 	topic := models.TMgr.GetTopic(int32(ID))
 	if topic == nil {
-		this.Data["Content"] = "文章索引错误."
+		this.Data["IsFalse"] = true
 		return
 	}
+	this.Data["IsFalse"] = false
 	this.Data["Title"] = topic.Title + " - " + models.Blogger.BlogName
-	Map["Url"] = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
-	Map["Title"] = topic.Title
-	Map["Time"] = topic.CreateTime.Format(helper.Layout_y_m_d2)
-	Map["Category"] = "<a " + topic.PCategory.Node.Children[0].Extra + "' rel='category tag'>" + topic.PCategory.Node.Children[0].Text + "</a>"
-	Map["Tags"] = ""
-	for i, tag := range topic.PTags {
-		if i == 0 {
-			Map["Tags"] += "<a " + tag.Node.Extra + " rel='tag'>" + tag.Node.Text + "</a>"
-		} else {
-			Map["Tags"] += ",<a " + tag.Node.Extra + " rel='tag'>" + tag.Node.Text + "</a>"
-		}
-	}
-	Map["ID"] = fmt.Sprint(topic.ID)
-	topicT := beego.BeeTemplates["topicTemplate.html"]
-	var buff bytes.Buffer
-	topicT.Execute(&buff, Map)
-	this.Data["Content"] = buff.String()
-
+	this.Data["Url"] = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
+	this.Data["Title"] = topic.Title
+	this.Data["Time"] = topic.CreateTime.Format(helper.Layout_y_m_d2)
+	this.Data["PCategory"] = topic.PCategory
+	this.Data["PTags"] = topic.PTags
+	this.Data["ID"] = fmt.Sprint(topic.ID)
+	this.Data["Content"] = string(topic.Content)
 }

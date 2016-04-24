@@ -41,4 +41,4 @@ h1, .h1, h2, .h2, h3, .h3 {
     margin-top: 10px;
     margin-bottom: 5px;
 }
-@media (min-width:768px){.modal-dialog{width: 800px;margin:30px auto}
+@media (min-width:768px){#topicsModal>.modal-dialog{width: 800px;margin:30px auto}

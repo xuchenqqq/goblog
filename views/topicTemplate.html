@@ -1,3 +1,6 @@
+{{if .IsFalse}}
+  索引错误.
+{{else}}
 <div class="row">
   <div class="col-md-12" role="main">
     <div class="post-container">
@@ -12,22 +15,27 @@
         <p>
           <b id="AnchorContentToggle" title="收起" style="cursor:pointer;">目录[+]</b>
         </p>
-        <div class="AnchorContent" id="AnchorContent"> </div>
+        <div class="AnchorContent" id="AnchorContent"></div>
       </div>
-      <div id="highlight-content"></div>
+      <div id="highlight-content" class="markdown-body">{{str2html .Content}}</div>
       <!-- /content -->
       <div class="meta-box">
-        <span class="cat-links">
-          <i class="fa fa-reorder"></i><b>分类:</b>
-           <!-- <a href="http://deepzz.com/cat/default" rel="category tag" target="_self">默认分类</a> -->
-          {{str2html .Category}}
+        <span class="cat-links"><i class="fa fa-reorder"></i><b>分类:</b>
+          {{with .PCategory}}
+            <a href="{{.Extra}}" rel='category tag'>{{.Text}}</a>
+          {{end}}
         </span>
-        <span class="tag-links">
-          <i class="fa fa-tags"></i><b>标签:</b>
-          <!-- <a href="http://www.soulteary.com/tags/bash" rel="tag" target="_self">bash</a>, 
-          <a href="http://www.soulteary.com/tags/dns" rel="tag" target="_self">DNS</a>, -->
-          {{str2html .Tags}}
-        </span>
+        <span class="tag-links"><i class="fa fa-tags"></i><b>标签:</b>
+          {{range $index, $elem := .PTags}}
+            {{range .}}
+              {{if eq $index 0}}
+                <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">{{.Text}}</a>
+              {{else}}
+                <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">,{{.Text}}</a>
+              {{end}}
+            {{end}}
+          {{end}}
+         </span>
       </div>
     </div>
     <!-- 多说评论框 start -->
@@ -47,3 +55,4 @@
     <!-- 多说公共JS代码 end -->
   </div>   
 </div>
+{{end}}

@@ -1,7 +1,7 @@
 <form class="form-inline">
   <div class="form-group">
     <div class="btn-group" role="group" style="margin-left: 10px;">   
-      <button type="button" data-toggle="modal" data-target="#gridSystemModal" id="newblogroll" class="btn btn-default btn-info">新增链接</button>
+      <button type="button" data-toggle="modal" data-target="#blogrollModal" id="newBlogroll" class="btn btn-sm btn-info">新增链接</button>
     </div>
   </div>
 </form>
@@ -19,29 +19,75 @@
         <th>操作</th>
       </tr>
     </thead>
-    <tbody id="blogroll-tbody">
-      <!-- <tr>
-        <th scope="row"><input type="checkbox"></th>
-        <td>Table cell</td>
-        <td>Table cell</td>
-        <td>Table cell</td>
-        <td><button type="button" class="btn btn-info btn-xs">修改</button><button type="button" class="btn btn-warning btn-xs">删除</button></td>
-      </tr>  -->  
+    <tbody>
+      {{range .Blogrolls}}
+      <tr>
+        <th scope="row"><input id="{{.ID}}" type="checkbox"></th>
+        <td>{{.SortID}}</td>
+        <td>{{.ID}}</td>
+        <td>{{.Extra}}</td>
+        <td>{{.Text}}</td>
+        <td>{{.CreateTime}}</td>
+        <td>
+          <button type="button" data-toggle="modal" data-target="#blogrollModal" class="btn btn-info btn-xs modifyBlogroll">修改</button>
+          <button type="button" class="btn btn-warning btn-xs deleteBlogroll">删除</button>
+        </td>
+      </tr>
+      {{end}}
     </tbody>
   </table>
+  <div id="blogrollModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridModalLabel">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+          <!-- title -->
+          <h4 class="modal-title" id="blogrollModalLabel"></h4>
+        </div>
+        <div class="modal-body">
+          <div class="container-fluid">
+            <!-- content -->
+            <div class="row">
+              <textarea class="form-control" id="blogrollContent" rows="8"></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <!-- button -->
+          <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Close</button><button type="button" id="saveBlogroll" class="btn btn-primary btn-sm">Save changes</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div>
   <script>
-    $('#newblogroll').on('click', function(){
-      $('#gridModalLabel').text('新增链接');
-      var example = '{\n        \"ID\": \"deepzz\",\n        \"SortID\": 0,\n        \"CreateTime\": "2016-02-03T21:35:11.28+08:00",\n        \"Node\": {\n                \"Type\": \"li\",\n                \"Class\": \"\",\n                \"Extra\": \"\",\n                \"Text\": \"\",\n                \"Children\": [\n                        {\n                                \"Type\": \"a\",\n                                \"Class\": \"\",\n                                \"Extra\": \"href=\'http://deepzz.com/\' target=\'_blank\'\",\n                                \"Text\": \"Deepzz的博客\",\n                                \"Children\": []\n                        }\n                ]\n        }\n}';
-      var html = '<div class="row"><textarea class="form-control" id="blogroll-content" rows="20">'+ example +'</textarea></div>';
-      $('.modal-body .container-fluid').html(html);
-      $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Close</button><button type="button" id="addblogroll" class="btn btn-primary">Save changes</button>');
-      $('#addblogroll').on('click', function(){
-        var content = $('#blogroll-content').val();
-        var resp = get('post', location.pathname, {flag:'addblogroll',json:content}, false);
-        if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-        location.reload();
-      });
-    });     
+    $('#newBlogroll').on('click', function(){
+      $('#blogrollModalLabel').text('新增链接');
+      var example = '{\n        "ID": "TEST",\n        "SortID": 0,\n         "Title": "deepzz0的github",\n        "Extra": "http://github.com/deepzz0",\n        "Text": "github",\n        "CreateTime": "2016-02-03T21:35:11.28+08:00"\n}';
+      $('#blogrollContent').val(example);
+    });
+    $('#saveBlogroll').on('click', function(){
+      var content = $('#blogrollContent').val();
+      var resp = get('post', location.pathname, {flag:'save',json:content}, false);
+      if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+      location.reload();
+    });
+    $('.modifyBlogroll').on('click',function(){
+      $('#blogrollModalLabel').text('修改链接');
+      var id = $(this).parent().parent().find('th input').attr('id');
+      if (id==""){pushMessage('info', '对不起|系统错误。');}
+      var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
+      if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+      $('#blogrollContent').val(JSONFormat(resp.Data));
+    });
+    $('.deleteBlogroll').on('click', function(){
+      var node = $(this).parent().parent()
+      var id = node.find('th input').attr('id');
+      if (id==""){pushMessage('info', '对不起|系统错误。');}
+      if (!confirm('确定要删除该链接吗？')){return;}
+      var resp = get('post', location.pathname, {flag:'delete', id:id}, false);
+      if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
+      node.remove();
+      pushMessage('success', '恭喜|操作成功。');
+    }); 
   </script>
 </div>

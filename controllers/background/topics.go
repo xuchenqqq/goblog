@@ -1,12 +1,10 @@
 package background
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego"
 	"github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/goblog/RS"
 	"github.com/deepzz0/goblog/helper"
@@ -14,175 +12,142 @@ import (
 )
 
 type TopicsController struct {
-	BackgroundController
+	Common
 }
 
 func (this *TopicsController) Get() {
-	this.TplName = "manage/adminTemplate.html"
+	this.Layout = "manage/adminlayout.html"
+	this.TplName = "manage/topic/topicTemplate.html"
 	this.Data["Title"] = "博文管理 - " + models.Blogger.BlogName
 	this.LeftBar("topics")
 	this.Content()
 }
 
 func (this *TopicsController) Content() {
-	topicT := beego.BeeTemplates["manage/topic/topicTemplate.html"]
-	var buffer bytes.Buffer
-	Map := make(map[string]string)
-	var html string
-	for _, cat := range models.Blogger.Categories {
-		if cat.IsCategory {
-			html += "<option value='" + cat.ID + "'>" + cat.ID + "</option>"
-		}
-	}
-	Map["Category"] = html
-	topicT.Execute(&buffer, Map)
-	this.Data["Content"] = fmt.Sprintf("%s", string(buffer.Bytes()))
-}
-
-func (this *TopicsController) Post() {
-	resp := helper.NewResponse()
-	flag := this.GetString("flag")
-	log.Debug(flag)
-	switch flag {
-	case "topics":
-		this.getTopics(resp)
-	case "addtopic":
-		this.addTopic(resp)
-	case "modify":
-		this.getTopic(resp)
-	case "domodify":
-		this.doModify(resp)
-	case "deletetopic":
-		this.doDeleteTopic(resp)
-	case "category":
-		this.category(resp)
-	case "tag":
-		this.tag(resp)
-	case "deletetopics":
-		this.doDeleteTopics(resp)
-	case "editor":
-		this.editor(resp)
-	default:
-		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "参数错误|未知的flag标志。"}
-	}
-	resp.WriteJson(this.Ctx.ResponseWriter)
-}
-
-type topic struct {
-	ID         int32
-	Title      string
-	TagIDs     []string
-	CategoryID string
-	Author     string
-	CreateTime string
-	EditTime   string
-}
-
-func (this *TopicsController) getTopics(resp *helper.Response) {
+	this.Data["Categories"] = models.Blogger.GetValidCategory()
+	this.Data["PreviousDis"] = "disabled"
+	this.Data["PreviousURL"] = "#"
+	this.Data["NextDis"] = "disabled"
+	this.Data["NextURL"] = "#"
 	cat := this.GetString("cat")
+	this.Data["ChooseCat"] = cat
 	page, err := this.GetInt("page")
 	if err != nil {
 		page = 1
 	}
 	var pageTopics []*models.Topic
 	var remainpage int
-	if cat == "" || cat == "0" {
+	if cat == "" || cat == "all" {
 		pageTopics, remainpage = models.TMgr.GetTopicsByPage(page)
-		if remainpage == -1 {
-			resp.Data = "<script>$('#previous').addClass('disabled');$('#next').addClass('disabled');pushMessage('info','莫得数据得嘛|是不是页码错了。')</script>"
-			return
-		}
 	} else {
 		pageTopics, remainpage = models.TMgr.GetTopicsByCatgory(cat, page)
-		if remainpage == -1 {
-			resp.Data = "<script>$('#previous').addClass('disabled');$('#next').addClass('disabled');pushMessage('info','莫得数据哦|我看是分类或者页码错误。')</script>"
-			return
-		}
 	}
-	topicsT := beego.BeeTemplates["manage/topic/topics.html"]
-	var buffer bytes.Buffer
-	var topics []*topic
-	Map := make(map[string]interface{})
-	if page == 1 {
-		Map["IsFirstPage"] = true
-	} else {
-		Map["IsFirstPage"] = false
-		Map["CategoryID"] = cat
-		Map["PrePage"] = page - 1
+	if page > 1 {
+		this.Data["PreviousDis"] = ""
+		this.Data["PreviousURL"] = fmt.Sprintf("/admin/topics?cat=%s&p=%d", cat, page-1)
 	}
-	if remainpage == 0 {
-		Map["IsLastPage"] = true
-	} else {
-		Map["IsLastPage"] = false
-		Map["CategoryID"] = cat
-		Map["NextPage"] = page + 1
+	if remainpage > 0 {
+		this.Data["NextDis"] = ""
+		this.Data["NextURL"] = fmt.Sprintf("/admin/topics?cat=%s&p=%d", cat, page+1)
 	}
-	for _, t := range pageTopics {
-		temp := &topic{}
-		temp.ID = t.ID
-		temp.Title = t.Title
-		temp.TagIDs = t.TagIDs
-		temp.Author = t.Author
-		temp.CategoryID = t.CategoryID
-		temp.CreateTime = t.CreateTime.Format(helper.Layout_y_m_d_time)
-		temp.EditTime = t.EditTime.Format(helper.Layout_y_m_d_time)
-		topics = append(topics, temp)
+	this.Data["Topics"] = pageTopics
+	var style string
+	for _, t := range models.Blogger.Tags {
+		style += t.TagStyle()
 	}
-	Map["Topics"] = topics
-	topicsT.Execute(&buffer, Map)
-	resp.Data = buffer.String()
+	this.Data["TagStyle"] = style
 }
-func (this *TopicsController) addTopic(resp *helper.Response) {
+
+func (this *TopicsController) Post() {
+	resp := helper.NewResponse()
+	defer resp.WriteJson(this.Ctx.ResponseWriter)
+	flag := this.GetString("flag")
+	log.Debugf("flag = %s", flag)
+	switch flag {
+	case "save":
+		this.saveTopic(resp)
+	case "modify":
+		this.getTopic(resp)
+	case "delete":
+		this.doDeleteTopic(resp)
+	case "deleteall":
+		this.doDeleteTopics(resp)
+	default:
+		resp.Status = RS.RS_failed
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "参数错误|未知的flag标志。"}
+	}
+}
+
+func (this *TopicsController) saveTopic(resp *helper.Response) {
+	operate := this.GetString("operate")
+	if operate == "" {
+		resp.Status = RS.RS_failed
+		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|操作类型错误。"}
+		return
+	}
 	title := this.GetString("title")
 	content := this.GetString("content")
 	cat := this.GetString("cat")
 	tags := this.GetString("tags")
-	log.Debugf("%s,%s,%s,%s", title, content, cat, tags)
-	if title == "" || content == "" {
+	log.Debugf("%s,%s,%s,%s, %s", title, content, cat, tags, operate)
+	if title == "" || content == "" || cat == "" {
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|请检查是否填写完整。"}
 		return
 	}
-	topic := models.NewTopic()
-	if strings.HasSuffix(title, "TAG:aboutme") {
-		topic.ID = 1
-		topic.Title = strings.Split(title, "-")[0]
-	} else {
-		if topic.ID == 1 {
-			topic.ID = models.NextVal()
+	if operate == "new" {
+		topic := models.NewTopic()
+		if strings.HasSuffix(title, "TAG:aboutme") {
+			topic.ID = 1
+			topic.Title = strings.Split(title, "-")[0]
+		} else {
+			if topic.ID == 1 {
+				topic.ID = models.NextVal()
+			}
+			topic.Title = title
 		}
-		topic.Title = title
-	}
-	topic.Content = []rune(content)
-	if category := models.Blogger.GetCategoryByID(cat); category == nil {
-		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|查找不到该分类。"}
-		return
+		topic.Content = content
+		if category := models.Blogger.GetCategoryByID(cat); category == nil {
+			resp.Status = RS.RS_failed
+			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|查找不到该分类。"}
+			return
+		} else {
+			topic.CategoryID = category.ID
+		}
+		if tags == "" {
+			topic.TagIDs = make([]string, 0)
+		} else {
+			sliceTags := strings.Split(tags, ",")
+			for _, tag := range sliceTags {
+				topic.TagIDs = append(topic.TagIDs, tag)
+			}
+		}
+		if err := models.TMgr.AddTopic(topic); err != nil {
+			resp.Status = RS.RS_failed
+			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
+			return
+		}
 	} else {
-		topic.CategoryID = category.ID
-	}
-	if tags == "" {
-		topic.TagIDs = make([]string, 0)
-	} else {
-		sliceTags := strings.Split(tags, ",")
-		for _, tag := range sliceTags {
-			topic.TagIDs = append(topic.TagIDs, tag)
+		id, err := strconv.Atoi(operate)
+		if err != nil {
+			resp.Status = RS.RS_failed
+			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|修改文章ID解析失败。"}
+			return
+		}
+		if t := models.TMgr.GetTopic(int32(id)); err != nil || t == nil {
+			resp.Status = RS.RS_failed
+			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统查找不到该文章ID。"}
+			return
+		} else {
+			t.Title = title
+			t.Content = content
+			if err := models.TMgr.ModTopic(t, cat, tags); err != nil {
+				resp.Status = RS.RS_failed
+				resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
+				return
+			}
 		}
 	}
-	if err := models.TMgr.AddTopic(topic, this.domain); err != nil {
-		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
-		return
-	}
-	resp.Success()
-}
-
-type modifyTopic struct {
-	Title    string
-	Content  string
-	Category string
-	Tags     []string
 }
 
 func (this *TopicsController) getTopic(resp *helper.Response) {
@@ -192,85 +157,15 @@ func (this *TopicsController) getTopic(resp *helper.Response) {
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|ID格式不正确。"}
 		return
 	}
-	if topic := models.TMgr.GetTopic(int32(id)); topic == nil {
+	if topic, err := models.TMgr.LoadTopic(int32(id)); err != nil || topic == nil {
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统未查询到该文章。"}
 		return
 	} else {
-		mt := &modifyTopic{}
-		mt.Title = topic.Title
-		mt.Content = string(topic.Content)
-		mt.Tags = topic.TagIDs
-		log.Debugf("%#v", topic.TagIDs)
-		mt.Category = topic.CategoryID
-		resp.Data = mt
+		resp.Data = topic
 	}
-}
-func (this *TopicsController) doModify(resp *helper.Response) {
-	id, err := this.GetInt32("id")
-	if err != nil {
-		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|ID格式不正确。"}
-		return
-	}
-	title := this.GetString("title")
-	content := this.GetString("content")
-	categoryID := this.GetString("cat")
-	tagIDs := this.GetString("tags")
-	if title == "" || content == "" || categoryID == "" {
-		resp.Status = RS.RS_failed
-		resp.Tips(helper.WARNING, RS.RS_params_error)
-		return
-	}
-	if t := models.TMgr.GetTopic(id); t == nil {
-		resp.Status = RS.RS_failed
-		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统查找不到该文章ID。"}
-		return
-	} else {
-		t.Title = title
-		t.Content = []rune(content)
-		if err := models.TMgr.ModTopic(t, categoryID, tagIDs); err != nil {
-			resp.Status = RS.RS_failed
-			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
-			return
-		}
-	}
-	resp.Success()
 }
 
-type selectCat struct {
-	ID         string
-	IsSelected bool
-}
-
-func (this *TopicsController) category(resp *helper.Response) {
-	categoryT := beego.BeeTemplates["manage/topic/category.html"]
-	var buffer bytes.Buffer
-	var selectCats []*selectCat
-	selected := this.GetString("selected")
-	for _, cat := range models.Blogger.Categories {
-		if cat.IsCategory {
-			temp := &selectCat{}
-			temp.ID = cat.ID
-			if cat.ID != "" && cat.ID == selected {
-				temp.IsSelected = true
-			}
-			selectCats = append(selectCats, temp)
-		}
-	}
-	categoryT.Execute(&buffer, map[string][]*selectCat{"Categories": selectCats})
-	resp.Data = buffer.String()
-}
-func (this *TopicsController) tag(resp *helper.Response) {
-	var html string
-	for _, tag := range models.Blogger.Tags {
-		html += tag.TagStyle()
-	}
-	tagsT := beego.BeeTemplates["manage/topic/tags.html"]
-	var buffer bytes.Buffer
-	tagsT.Execute(&buffer, map[string]string{"Content": html})
-	resp.Data = buffer.String()
-}
 func (this *TopicsController) doDeleteTopic(resp *helper.Response) {
 	id, err := this.GetInt("id")
 	if err != nil {
@@ -285,6 +180,7 @@ func (this *TopicsController) doDeleteTopic(resp *helper.Response) {
 		return
 	}
 }
+
 func (this *TopicsController) doDeleteTopics(resp *helper.Response) {
 	ids := this.GetString("ids")
 	log.Debugf("%s", ids)
@@ -309,10 +205,4 @@ func (this *TopicsController) doDeleteTopics(resp *helper.Response) {
 			return
 		}
 	}
-}
-func (this *TopicsController) editor(resp *helper.Response) {
-	editorT := beego.BeeTemplates["manage/editor.html"]
-	var buffer bytes.Buffer
-	editorT.Execute(&buffer, "")
-	resp.Data = fmt.Sprintf("%s", string(buffer.Bytes()))
 }

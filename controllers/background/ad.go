@@ -5,11 +5,11 @@ import (
 )
 
 type ADController struct {
-	BackgroundController
+	Common
 }
 
 func (this *ADController) Get() {
-	this.TplName = "manage/adminTemplate.html"
+	this.TplName = "manage/adminlayout.html"
 	this.Data["Title"] = "广告管理 - " + models.Blogger.BlogName
 	this.LeftBar("ad")
 	this.Content()
