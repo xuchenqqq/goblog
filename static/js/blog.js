@@ -44,6 +44,33 @@ Array.prototype.remove = function(val) {
         this.splice(index, 1);
     }
 };
+
+// ------------------------------------- 目录 ----------------------------------------
+$("#highlight-content").find("h2,h3,h4,h5,h6").each(function(i,item){
+    var tag = $(item).get(0).localName;
+    $(item).attr("id","wow"+i);
+    $("#AnchorContent").append('<li><a class="new'+tag+' anchor-link" onclick="return false;" href="#" link="#wow'+i+'">'+(i+1)+" · "+$(this).text()+'</a></li>');
+    $(".newh2").css("margin-left",0);
+    $(".newh3").css("margin-left",10);
+    $(".newh4").css("margin-left",20);
+    $(".newh5").css("margin-left",30);
+    $(".newh6").css("margin-left",40);
+});
+$("#AnchorContentToggle").click(function(){
+    var text = $(this).html();
+    if(text=="目录[-]"){
+        $(this).html("目录[+]");
+        $(this).attr({"title":"展开"});
+    }else{
+        $(this).html("目录[-]");
+        $(this).attr({"title":"收起"});
+    }
+    $("#AnchorContent").toggle();
+});
+$(".anchor-link").click(function(){
+    $("html,body").animate({scrollTop: $($(this).attr("link")).offset().top}, 1000);
+});
+
 // ------------------------------------- json format ----------------------------------------
 (function(window) {
     var p = [],
@@ -111,6 +138,10 @@ function get(method, url, data, async)
             resp = response;
         })
     });
+    console.log(resp,resp.Status==301);
+    if (resp.Status==301){
+        pushMessage('primary', '对不起|你暂为登录。');
+    }
     return resp;
 }
 // ------------------------------------- notify ----------------------------------------

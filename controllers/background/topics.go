@@ -106,7 +106,7 @@ func (this *TopicsController) saveTopic(resp *helper.Response) {
 			}
 			topic.Title = title
 		}
-		topic.Content = []rune(content)
+		topic.Content = content
 		if category := models.Blogger.GetCategoryByID(cat); category == nil {
 			resp.Status = RS.RS_failed
 			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|查找不到该分类。"}
@@ -122,7 +122,7 @@ func (this *TopicsController) saveTopic(resp *helper.Response) {
 				topic.TagIDs = append(topic.TagIDs, tag)
 			}
 		}
-		if err := models.TMgr.AddTopic(topic, this.domain); err != nil {
+		if err := models.TMgr.AddTopic(topic); err != nil {
 			resp.Status = RS.RS_failed
 			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
 			return
@@ -134,13 +134,13 @@ func (this *TopicsController) saveTopic(resp *helper.Response) {
 			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|修改文章ID解析失败。"}
 			return
 		}
-		if t := models.TMgr.GetTopic(int32(id)); t == nil {
+		if t := models.TMgr.GetTopic(int32(id)); err != nil || t == nil {
 			resp.Status = RS.RS_failed
 			resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统查找不到该文章ID。"}
 			return
 		} else {
 			t.Title = title
-			t.Content = []rune(content)
+			t.Content = content
 			if err := models.TMgr.ModTopic(t, cat, tags); err != nil {
 				resp.Status = RS.RS_failed
 				resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|" + err.Error()}
@@ -150,13 +150,6 @@ func (this *TopicsController) saveTopic(resp *helper.Response) {
 	}
 }
 
-type modifyTopic struct {
-	Title    string
-	Content  string
-	Category string
-	Tags     []string
-}
-
 func (this *TopicsController) getTopic(resp *helper.Response) {
 	id, err := this.GetInt("id")
 	if err != nil {
@@ -164,18 +157,12 @@ func (this *TopicsController) getTopic(resp *helper.Response) {
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|ID格式不正确。"}
 		return
 	}
-	if topic := models.TMgr.GetTopic(int32(id)); topic == nil {
+	if topic, err := models.TMgr.LoadTopic(int32(id)); err != nil || topic == nil {
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|系统未查询到该文章。"}
 		return
 	} else {
-		mt := &modifyTopic{}
-		mt.Title = topic.Title
-		mt.Content = string(topic.Content)
-		mt.Tags = topic.TagIDs
-		log.Debugf("%#v", topic.TagIDs)
-		mt.Category = topic.CategoryID
-		resp.Data = mt
+		resp.Data = topic
 	}
 }
 

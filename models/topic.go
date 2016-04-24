@@ -11,10 +11,25 @@ import (
 	"github.com/deepzz0/go-common/log"
 	db "github.com/deepzz0/go-common/mongo"
 	"github.com/deepzz0/goblog/RS"
+	"github.com/russross/blackfriday"
 	"gopkg.in/mgo.v2/bson"
 )
 
 const OnePageCount = 15
+
+func init() {
+	go scheduleTopic()
+}
+
+func scheduleTopic() {
+	t := time.NewTicker(time.Minute * 10)
+	for {
+		select {
+		case <-t.C:
+			TMgr.DoDelete(time.Now())
+		}
+	}
+}
 
 // topic URL ＝ "/2016/01/02/id.html"
 type Topic struct {
@@ -25,7 +40,8 @@ type Topic struct {
 	Title      string
 	CategoryID string
 	TagIDs     []string
-	Content    []rune
+	Content    string
+	NeedDelete time.Time // 开始删除时间,超过48小时永久删除
 
 	Preview   string    `bson:"-"`
 	PCategory *Category `bson:"-"`
@@ -38,6 +54,7 @@ type TopicMgr struct {
 	IDs             INT32
 	GroupByCategory map[string]Topics
 	GroupByTag      map[string]Topics
+	DeleteTopics    Topics
 }
 
 func NewTopic() *Topic {
@@ -74,8 +91,12 @@ func (m *TopicMgr) loadTopics() {
 	length := len(topics)
 	m.IDs = make([]int32, 0, length)
 	for _, topic := range topics {
+		if !topic.NeedDelete.IsZero() {
+			m.DeleteTopics = append(m.DeleteTopics, topic)
+			continue
+		}
 		category := Blogger.GetCategoryByID(topic.CategoryID)
-		if category != nil {
+		if category == nil {
 			topic.CategoryID = "default"
 			category = Blogger.GetCategoryByID(topic.CategoryID)
 		}
@@ -89,6 +110,8 @@ func (m *TopicMgr) loadTopics() {
 				topic.TagIDs = append(topic.TagIDs[:i], topic.TagIDs[i+1:]...)
 			}
 		}
+		topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
+		// preview
 		m.Topics[topic.ID] = topic
 		m.IDs = append(m.IDs, topic.ID)
 	}
@@ -114,6 +137,15 @@ func (m *TopicMgr) UpdateTopics() int {
 
 func (m *TopicMgr) GetTopic(id int32) *Topic {
 	return m.Topics[id]
+}
+
+func (m *TopicMgr) LoadTopic(id int32) (*Topic, error) {
+	var t *Topic
+	err := db.FindOne(DB, C_TOPIC, bson.M{"id": id}, &t)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
 }
 
 func (m *TopicMgr) GetTopicsByPage(page int) ([]*Topic, int) {
@@ -196,9 +228,12 @@ func getPage(length int) int {
 	return page
 }
 
-func (m *TopicMgr) AddTopic(topic *Topic, domain string) error {
+func (m *TopicMgr) AddTopic(topic *Topic) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+	if err := db.Insert(DB, C_TOPIC, topic); err != nil {
+		return err
+	}
 	category := Blogger.GetCategoryByID(topic.CategoryID)
 	if category == nil {
 		topic.CategoryID = "default"
@@ -227,7 +262,9 @@ func (m *TopicMgr) AddTopic(topic *Topic, domain string) error {
 	m.Topics[topic.ID] = topic
 	m.IDs = append(m.IDs, topic.ID)
 	sort.Sort(m.IDs)
-	return db.Insert(DB, C_TOPIC, topic)
+
+	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
+	return nil
 }
 
 func (m *TopicMgr) CategoryGroupDeleteTopic(topic *Topic) {
@@ -257,10 +294,13 @@ func (m *TopicMgr) TagGroupDeleteTopic(id string, topic *Topic) {
 func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
+	if err := db.Update(DB, C_TOPIC, bson.M{"id": topic.ID}, topic); err != nil {
+		return err
+	}
 	if topic.CategoryID != catgoryID {
 		m.CategoryGroupDeleteTopic(topic)
 		category := Blogger.GetCategoryByID(catgoryID)
-		if category != nil {
+		if category == nil {
 			topic.CategoryID = "default"
 			category = Blogger.GetCategoryByID(catgoryID)
 		}
@@ -298,16 +338,15 @@ func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 			sort.Sort(m.GroupByTag[id])
 		}
 	}
-	return db.Update(DB, C_TOPIC, bson.M{"id": topic.ID}, topic)
+	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
+	return nil
 }
 
 func (m *TopicMgr) DelTopic(id int32) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	if topic := m.GetTopic(id); topic != nil {
-		if err := db.Remove(DB, C_TOPIC, bson.M{"id": id}); err != nil {
-			return err
-		}
+	if topic := m.GetTopic(id); topic != nil && topic.NeedDelete.IsZero() {
+		topic.NeedDelete = time.Now()
 		if topic.CategoryID != "" {
 			m.CategoryGroupDeleteTopic(topic)
 		}
@@ -319,10 +358,31 @@ func (m *TopicMgr) DelTopic(id int32) error {
 				m.IDs = append(m.IDs[:i], m.IDs[i+1:]...)
 			}
 		}
+		m.DeleteTopics = append(m.DeleteTopics, topic)
 		delete(m.Topics, id)
 		return nil
 	}
 	return fmt.Errorf("Topic id=%d not found in cache.", id)
+}
+
+func (m *TopicMgr) RestoreTopic(topic *Topic) int {
+	if topic.NeedDelete.IsZero() {
+		return RS.RS_notin_trash
+	}
+	topic.NeedDelete = time.Time{}
+	err := m.ModTopic(topic, topic.CategoryID, strings.Join(topic.TagIDs, ","))
+	if err != nil {
+		return RS.RS_undo_falied
+	}
+	return RS.RS_success
+}
+
+func (m *TopicMgr) DoDelete(t time.Time) {
+	for _, topic := range m.DeleteTopics {
+		if topic.NeedDelete.AddDate(0, 0, 2).Before(t) {
+			db.Remove(DB, C_TOPIC, bson.M{"id": topic.ID})
+		}
+	}
 }
 
 // -----------------------------------------------------------------

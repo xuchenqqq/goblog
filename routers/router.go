@@ -43,6 +43,7 @@ func init() {
 	beego.Router("/admin/databackup", &background.DataBackupRecover{})
 	beego.Router("/admin/datarecover", &background.DataBackupRecover{})
 	beego.Router("/admin/syslog", &background.SyslogController{})
+	beego.Router("/admin/trash", &background.TrashController{})
 }
 
 // 404

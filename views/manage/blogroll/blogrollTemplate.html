@@ -80,12 +80,14 @@
       $('#blogrollContent').val(JSONFormat(resp.Data));
     });
     $('.deleteBlogroll').on('click', function(){
-      var id = $(this).parent().parent().find('th input').attr('id');
+      var node = $(this).parent().parent()
+      var id = node.find('th input').attr('id');
       if (id==""){pushMessage('info', '对不起|系统错误。');}
       if (!confirm('确定要删除该链接吗？')){return;}
       var resp = get('post', location.pathname, {flag:'delete', id:id}, false);
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-      location.reload();
+      node.remove();
+      pushMessage('success', '恭喜|操作成功。');
     }); 
   </script>
 </div>

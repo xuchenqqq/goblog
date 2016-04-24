@@ -68,7 +68,7 @@
       <li class="next {{.NextDis}}"><a href="{{.NextURL}}">Older <span aria-hidden="true">→</span></a></li>
     </ul>
   </nav>
-  <div id="topicsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridModalLabel">
+  <div id="topicsModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridTopicsModalLabel">
     <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header">
@@ -135,6 +135,9 @@
       flagNew = "";
       $('#topicModalLabel').text("新增文章");
       $("#selecetCategory").find("option[id='default']").attr("selected",true);
+      $('#editor-title').val("");
+      $('#editor-area').text("");
+      $('#editor-area').text("");
     });
     $('#deleteall').on('click', function(){
       var checkedID = new Array();
@@ -148,15 +151,20 @@
       if (!confirm('确定要删除所选的文章吗？')){return;}
       var resp = get('post', location.pathname, {flag:'deleteall', ids:checkedID.toString()},false);
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-      location.reload();
+      $('input:checkbox:checked').each(function(i){
+        $(this).parent().parent().remove();
+      });
+      pushMessage('success', '恭喜|操作成功。');
     });   
     $('.deleteTopic').on('click', function(){
-      var id = $(this).parent().parent().find('th input').attr('id');
+      var node = $(this).parent().parent()
+      var id = node.find('th input').attr('id');
       if (id==""){pushMessage('info', '对不起|系统错误。');return;}
       if (!confirm('确定要删除该文章吗？')){return;}
       var resp = get('post', location.pathname, {flag:'delete', id:id}, false);
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-      location.reload();
+      pushMessage('success', '恭喜|操作成功。');
+      node.remove();
     });
     $('.modifyTopic').on('click', function(){
       $('#topicModalLabel').text("修改文章");
@@ -165,15 +173,17 @@
       var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
       $("#selecetCategory").find("option[id='"+ resp.Data.Category +"']").attr("selected",true);
-      $('#editor-title').attr('value',resp.Data.Title);
+      $('#editor-title').val(resp.Data.Title);
       $('#editor-area').text(resp.Data.Content);
-      for (var i = 0; i < resp.Data.Tags.length; i++){
+      if (resp.Data.Tags != null){
+        for (var i = 0; i < resp.Data.Tags.length; i++){
           var tag = resp.Data.Tags[i]
           console.log(tag)
           tags.push(tag);
           var html = '<span class="label label-primary">'+ tag +'<span aria-hidden="true" class="removeTag" onclick="removetag(this);">×</span></span>';
           $('#newtopic-tag').append(html);
         }
+      }
     });
     $('#saveTopic').on('click', function(){
       var title = $('#editor-title').val();

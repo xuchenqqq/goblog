@@ -80,15 +80,14 @@
                 $('#user-info').on('click', function(){
                   var resp = get('post', "/admin/user", {flag:"info"}, false);
                   if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-                  console.log(resp)
                   $('#gridModalLabel').text('个人信息');
-                  $('.modal-body .container-fluid').html(resp.Data);
+                  $('#gridSystemModal .modal-body .container-fluid').html(resp.Data);
                 });
                 $('#modify-passwd').on('click', function(){
                   var resp = get('post', "/admin/user", {flag:"modpasswd"}, false);
                   if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
                   $('#gridModalLabel').text('修改密码');
-                  $('.modal-body .container-fluid').html(resp.Data);
+                  $('#gridSystemModal .modal-body .container-fluid').html(resp.Data);
                 });
               </script>
             </ul>
@@ -97,7 +96,7 @@
       </div><!-- /.navbar-collapse -->
     </div><!-- /.container-fluid -->
   </nav>
-  <div id="gridSystemModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridModalLabel">
+  <div id="gridSystemModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridSysModalLabel">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
           <div class="modal-header">

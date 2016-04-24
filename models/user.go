@@ -55,10 +55,10 @@ func NewUM() *UserMgr { return &UserMgr{Users: make(map[string]*User)} }
 var UMgr = NewUM()
 
 func init() {
-	go schedule()
+	go scheduleUser()
 }
 
-func schedule() {
+func scheduleUser() {
 	tk := time.NewTicker(time.Hour)
 	for {
 		select {

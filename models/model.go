@@ -5,9 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/deepzz0/goblog/RS"
 	// "github.com/deepzz0/go-common/log"
 	"github.com/deepzz0/go-common/monitor"
+	"github.com/deepzz0/goblog/RS"
 )
 
 const (
@@ -21,6 +21,7 @@ var Blogger *User
 
 func init() {
 	monitor.HookOnExit("flushdata", flushdata)
+	go monitor.Startup()
 	// 以下三句保证调用顺序
 	UMgr.loadUsers()
 	Blogger = UMgr.Get("deepzz")
@@ -48,5 +49,5 @@ func init() {
 
 func flushdata() {
 	UMgr.UpdateUsers()
-	TMgr.UpdateTopics()
+	// TMgr.UpdateTopics()
 }
