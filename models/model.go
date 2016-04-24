@@ -20,7 +20,7 @@ const (
 var Blogger *User
 
 func init() {
-	monitor.RegistExitFunc("flushdata", flushdata)
+	monitor.HookOnExit("flushdata", flushdata)
 	// 以下三句保证调用顺序
 	UMgr.loadUsers()
 	Blogger = UMgr.Get("deepzz")
