@@ -307,7 +307,7 @@ func (t *Tag) reduceCount() {
 }
 func (t *Tag) TagStyle() string {
 	rand := helper.GetRand()
-	style := TagStyle[rand.Intn(len(TagStyle))]
+	style := TagStyle[rand.Intn(4)]
 	return "<span class='label " + style + "'>" + t.ID + "</span>"
 }
 

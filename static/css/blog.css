@@ -358,7 +358,7 @@ a {
     padding: 10px;
 }
 .post-container p {
-    text-indent: 2em;
+    /*text-indent: 2em;*/
     margin: 5px 0;
 }
 .post-container .post-expect p {

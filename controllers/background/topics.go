@@ -89,8 +89,8 @@ func (this *TopicsController) saveTopic(resp *helper.Response) {
 	content := this.GetString("content")
 	cat := this.GetString("cat")
 	tags := this.GetString("tags")
-	log.Debugf("%s,%s,%s,%s, %s", title, content, cat, tags, operate)
 	if title == "" || content == "" || cat == "" {
+		log.Debugf("%s,%s,%s,%s, %s", title, content, cat, tags, operate)
 		resp.Status = RS.RS_failed
 		resp.Err = helper.Error{Level: helper.WARNING, Msg: "错误|请检查是否填写完整。"}
 		return

@@ -136,8 +136,8 @@
       $('#topicModalLabel').text("新增文章");
       $("#selecetCategory").find("option[id='default']").attr("selected",true);
       $('#editor-title').val("");
-      $('#editor-area').text("");
-      $('#editor-area').text("");
+      $('#editor-area').val("");
+      $('#editor-view').text("");
     });
     $('#deleteall').on('click', function(){
       var checkedID = new Array();
@@ -212,7 +212,7 @@
         tags.push(tag);
         var classname = $(this).attr('class')
         var html = '<span class="'+ classname +'">'+ tag +'<span aria-hidden="true" class="remove-tag" onclick="removetag(this);">×</span></span>';
-        $('#newtopic-tag').append(html);
+        $('#newTag').append(html);
       });
     });
     $('#add-tag').on('click', function(){

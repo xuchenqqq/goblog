@@ -252,11 +252,11 @@ func (m *TopicMgr) AddTopic(topic *Topic) error {
 			newtag := NewTag()
 			newtag.ID = id
 			newtag.Extra = "/tag/" + id
-			newtag.addCount()
-			Blogger.Tags[id] = newtag
+			newtag.Text = id
 			m.GroupByTag[id] = append(m.GroupByTag[id], topic)
 			sort.Sort(m.GroupByTag[id])
 			topic.PTags = append(topic.PTags, newtag)
+			Blogger.AddTag(newtag)
 		}
 	}
 	m.Topics[topic.ID] = topic
@@ -294,9 +294,6 @@ func (m *TopicMgr) TagGroupDeleteTopic(id string, topic *Topic) {
 func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 	m.lock.Lock()
 	defer m.lock.Unlock()
-	if err := db.Update(DB, C_TOPIC, bson.M{"id": topic.ID}, topic); err != nil {
-		return err
-	}
 	if topic.CategoryID != catgoryID {
 		m.CategoryGroupDeleteTopic(topic)
 		category := Blogger.GetCategoryByID(catgoryID)
@@ -330,13 +327,16 @@ func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 				newtag := NewTag()
 				newtag.ID = id
 				newtag.Extra = "/tag/" + id
-				newtag.addCount()
-				Blogger.Tags[id] = newtag
+				newtag.Text = id
 				m.GroupByTag[id] = append(m.GroupByTag[id], topic)
 				topic.PTags = append(topic.PTags, newtag)
+				Blogger.AddTag(newtag)
 			}
 			sort.Sort(m.GroupByTag[id])
 		}
+	}
+	if err := db.Update(DB, C_TOPIC, bson.M{"id": topic.ID}, topic); err != nil {
+		return err
 	}
 	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
 	return nil

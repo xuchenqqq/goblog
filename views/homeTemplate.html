@@ -26,12 +26,10 @@
               </span>
               <span class="tag-links"><i class="fa fa-tags"></i><b>标签:</b>
                 {{range $index, $elem := .PTags}}
-                  {{range .}}
-                    {{if eq $index 0}}
-                      <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">{{.Text}}</a>
-                    {{else}}
-                      <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">,{{.Text}}</a>
-                    {{end}}
+                  {{if eq $index 0}}
+                    <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">{{.Text}}</a>
+                  {{else}}
+                    <a href="{{.Extra}}" rel="tag" title="{{.Count}} topic">,{{.Text}}</a>
                   {{end}}
                 {{end}}
               </span>
@@ -69,7 +67,7 @@
     <!-- <a href="http://hessian.cn/tag/4741" class="tag-link-10">4741</a> -->
       {{range .Tags}}
         {{if lt .Count 23}}
-          <a class="tag-link-{{.}}" href="{{.Extra}}" title="{{.Count}} topic">{{.Text}}</a>
+          <a class="tag-link-{{.Count}}" href="{{.Extra}}" title="{{.Count}} topic">{{.Text}}</a>
         {{else}}
           <a class="tag-link-22" href="{{.Extra}}" title="{{.Count}} topic">{{.Text}}</a>
         {{end}}
