@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+>
+
+<channel>
+  <title>Deepzz 的个人博客</title>
+  <atom:link href="http://deepzz.com/feed" rel="self" type="application/rss+xml" />
+  <link>http://deepzz.com</link>
+  <description>Golang爱好者，专注于游戏服务器开发，轻架构，高并发</description>
+  <language>zh-CN</language>
+  <sy:updatePeriod>hourly</sy:updatePeriod>
+  <sy:updateFrequency>1</sy:updateFrequency>
+  <generator>http://deepzz.com/?v=0.0.1</generator>
+  <item>
+    <title>RSS Tutorial</title>
+    <link>http://www.w3school.com.cn/rss</link>
+    <dc:creator><![CDATA[洗碗的老彭]]></dc:creator>
+    <category><![CDATA[lua]]></category>
+	<category><![CDATA[类]]></category>
+	<guid isPermaLink="false">http://pengbotao.cn/?p=1646</guid>
+    <description>New RSS tutorial on W3School</description>
+    <content:encoded></content:encoded>
+    <slash:comments>0</slash:comments>
+    <wfw:commentRss>http://pengbotao.cn/lua-class.html/feed</wfw:commentRss>
+    <pubDate>Sun, 17 Jan 2016 15:06:29 +0000</pubDate>
+  </item>
+  <item>
+    <title>XML Tutorial</title>
+    <link>http://www.w3school.com.cn/xml</link>
+    <description>New XML tutorial on W3School</description>
+    <pubDate>Sun, 17 Jan 2016 15:06:29 +0000</pubDate>
+  </item>
+</channel>
+
+</rss>

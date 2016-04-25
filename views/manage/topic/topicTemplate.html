@@ -176,14 +176,16 @@
       $('#editor-title').val(resp.Data.Title);
       $('#editor-area').val(resp.Data.Content);
       $('#editor-view').text("");
+      var html = "";
+      tags = new Array();
       if (resp.Data.TagIDs != null){
         for (var i = 0; i < resp.Data.TagIDs.length; i++){
           var tag = resp.Data.TagIDs[i]
           tags.push(tag);
-          var html = '<span class="label label-primary">'+ tag +'<span aria-hidden="true" class="removeTag" onclick="removetag(this);">×</span></span>';
-          $('#newTag').append(html);
+          html += '<span class="label label-primary">'+ tag +'<span aria-hidden="true" class="removeTag" onclick="removetag(this);">×</span></span>';
         }
       }
+      $('#newTag').html(html);
     });
     $('#saveTopic').on('click', function(){
       var title = $('#editor-title').val();

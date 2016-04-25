@@ -4,17 +4,17 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/context"
 	"github.com/deepzz0/goblog/controllers"
 	"github.com/deepzz0/goblog/controllers/background"
 )
 
 func init() {
+	// config
 	beego.BConfig.WebConfig.Session.SessionOn = true
 	beego.BConfig.WebConfig.Session.SessionName = "SESSIONID"
 	beego.BConfig.WebConfig.Session.SessionCookieLifeTime = 3600
 	beego.BConfig.WebConfig.Session.SessionGCMaxLifetime = 3600
-
-	beego.ErrorHandler("404", HTTPNotFound)
 
 	beego.Router("/", &controllers.HomeController{})
 	beego.Router("/p/:page([0-9]+)", &controllers.HomeController{})
@@ -27,8 +27,7 @@ func init() {
 	beego.Router("/about", &controllers.AboutController{})
 	beego.Router("/login", &controllers.AuthController{})
 	beego.Router("/search", &controllers.SearchController{})
-
-	// // admin
+	// admin
 	beego.InsertFilter("/admin/*", beego.BeforeRouter, background.FilterUser)
 	beego.Router("/admin/user", &background.UserController{})
 	beego.Router("/admin/data", &background.DataAnalyseController{})
@@ -36,7 +35,6 @@ func init() {
 	beego.Router("/admin/category", &background.CategoryController{})
 	beego.Router("/admin/message", &background.MessageController{})
 	beego.Router("/admin/social", &background.SocialController{})
-	// beego.Router("/admin/commit", &background.CommitController{})
 	beego.Router("/admin/blogroll", &background.BlogrollController{})
 	beego.Router("/admin/ad", &background.ADController{})
 	beego.Router("/admin/sysconfig", &background.SysconfigController{})
@@ -44,6 +42,15 @@ func init() {
 	beego.Router("/admin/datarecover", &background.DataBackupRecover{})
 	beego.Router("/admin/syslog", &background.SyslogController{})
 	beego.Router("/admin/trash", &background.TrashController{})
+	// rss
+	beego.Get("/feed", Feed)
+	// 404
+	beego.ErrorHandler("404", HTTPNotFound)
+}
+
+// rss
+func Feed(ctx *context.Context) {
+	http.ServeFile(ctx.ResponseWriter, ctx.Request, "./static/feed.xml")
 }
 
 // 404
