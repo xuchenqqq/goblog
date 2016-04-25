@@ -3,6 +3,7 @@ package models
 import (
 	"fmt"
 	// "reflect"
+	"regexp"
 	"sort"
 	"strings"
 	"sync"
@@ -112,6 +113,7 @@ func (m *TopicMgr) loadTopics() {
 		}
 		topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
 		// preview
+		m.DoPrewview(topic)
 		m.Topics[topic.ID] = topic
 		m.IDs = append(m.IDs, topic.ID)
 	}
@@ -122,6 +124,13 @@ func (m *TopicMgr) loadTopics() {
 	for k, _ := range m.GroupByTag {
 		sort.Sort(m.GroupByTag[k])
 	}
+}
+
+func (m *TopicMgr) DoPrewview(topic *Topic) {
+	reg, _ := regexp.Compile(`\</\w{1,3}\>`)
+	index := reg.FindAllStringIndex(topic.Content, 10)
+	x := index[len(index)-1]
+	topic.Preview = string(blackfriday.MarkdownCommon([]byte(topic.Content[:x[len(x)-1]])))
 }
 
 func (m *TopicMgr) UpdateTopics() int {
@@ -264,6 +273,7 @@ func (m *TopicMgr) AddTopic(topic *Topic) error {
 	sort.Sort(m.IDs)
 
 	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
+	m.DoPrewview(topic)
 	return nil
 }
 
@@ -339,6 +349,7 @@ func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 		return err
 	}
 	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
+	m.DoPrewview(topic)
 	return nil
 }
 

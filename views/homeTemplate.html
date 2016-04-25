@@ -13,10 +13,7 @@
               <span class="comments-link"><i class="fa fa-comments"></i><a href="{{.URL}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"> </a></span>
             </div>
             <div class="post-content post-expect">
-              <p>
-                <div class="preview">{{.Preview}}</div>
-                <a href="{{.URL}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
-              </p>
+                <div class="markdown-body" id="highlight-content">{{str2html .Preview}}<a href="{{.URL}}" class="more-link btn btn-primary btn-xs">阅读全文</a></div>
             </div>
             <div class="meta-box">
               <span class="cat-links"><i class="fa fa-reorder"></i><b>分类:</b>

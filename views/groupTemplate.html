@@ -12,7 +12,7 @@
 	            </div>
 	            <div class="post-content post-expect">
 	              <p>
-	                <div class="preview">{{.Preview}}</div>
+	                <div class="markdown-body" id="highlight-content">{{str2html .Preview}}</div>
 	                <a href="{{.URL}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
 	              </p>
 	            </div>
@@ -45,10 +45,4 @@
 	</nav>
 </div>
 <script>
-$("div.preview").each(function(){
-	$(this).html(marked($(this).text()));
-    $('pre code').each(function(i, block) {
-       hljs.highlightBlock(block);
-    });
-});
 </script>
