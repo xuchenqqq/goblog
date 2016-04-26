@@ -134,7 +134,7 @@
     $('#newTopic').on('click', function(){
       flagNew = "";
       $('#topicModalLabel').text("新增文章");
-      $("#selecetCategory").find("option[id='default']").attr("selected",true);
+      $("#selecetCategory").val("default");
       $('#editor-title').val("");
       $('#editor-area').val("");
       $('#editor-view').text("");
@@ -174,7 +174,7 @@
       flagNew = id;
       var resp = get('post', location.pathname, {flag:'modify', id:id}, false);
       if (resp.Status != success){pushMessage(resp.Err.Level, resp.Err.Msg);return;}
-      $("#selecetCategory").find("option[id='"+ resp.Data.Category +"']").attr("selected",true);
+      $("#selecetCategory").val(resp.Data.CategoryID);
       $('#editor-title').val(resp.Data.Title);
       $('#editor-area').val(resp.Data.Content);
       $('#editor-view').text("");
