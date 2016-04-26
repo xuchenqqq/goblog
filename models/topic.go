@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	// "reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/deepzz0/go-common/log"
 	db "github.com/deepzz0/go-common/mongo"
 	"github.com/deepzz0/goblog/RS"
+	"github.com/deepzz0/goblog/helper"
 	"github.com/russross/blackfriday"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -47,6 +47,8 @@ type Topic struct {
 	Preview   string    `bson:"-"`
 	PCategory *Category `bson:"-"`
 	PTags     []*Tag    `bson:"-"`
+	URL       string    `bson:"-"`
+	Time      string    `bson:"-"`
 }
 
 type TopicMgr struct {
@@ -111,9 +113,7 @@ func (m *TopicMgr) loadTopics() {
 				topic.TagIDs = append(topic.TagIDs[:i], topic.TagIDs[i+1:]...)
 			}
 		}
-		topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
-		// preview
-		m.DoPrewview(topic)
+		m.DoTopicUpdate(topic)
 		m.Topics[topic.ID] = topic
 		m.IDs = append(m.IDs, topic.ID)
 	}
@@ -126,11 +126,15 @@ func (m *TopicMgr) loadTopics() {
 	}
 }
 
-func (m *TopicMgr) DoPrewview(topic *Topic) {
+func (m *TopicMgr) DoTopicUpdate(topic *Topic) {
+	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
 	reg, _ := regexp.Compile(`\</\w{1,3}\>`)
 	index := reg.FindAllStringIndex(topic.Content, 10)
 	x := index[len(index)-1]
 	topic.Preview = string(blackfriday.MarkdownCommon([]byte(topic.Content[:x[len(x)-1]])))
+
+	topic.URL = fmt.Sprintf("%s/%d.html", topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
+	topic.Time = topic.CreateTime.Format(helper.Layout_y_m_d)
 }
 
 func (m *TopicMgr) UpdateTopics() int {
@@ -222,7 +226,7 @@ func (m *TopicMgr) GetTopicsByTag(tagID string, page int) ([]*Topic, int) {
 func (m *TopicMgr) GetTopicsSearch(search string) []*Topic {
 	var topics []*Topic
 	for _, v := range m.Topics {
-		if strings.Contains(v.Title, search) {
+		if strings.Contains(strings.ToLower(v.Title), search) {
 			topics = append(topics, v)
 		}
 	}
@@ -272,8 +276,7 @@ func (m *TopicMgr) AddTopic(topic *Topic) error {
 	m.IDs = append(m.IDs, topic.ID)
 	sort.Sort(m.IDs)
 
-	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
-	m.DoPrewview(topic)
+	m.DoTopicUpdate(topic)
 	return nil
 }
 
@@ -345,11 +348,11 @@ func (m *TopicMgr) ModTopic(topic *Topic, catgoryID string, tags string) error {
 			sort.Sort(m.GroupByTag[id])
 		}
 	}
+	topic.EditTime = time.Now()
 	if err := db.Update(DB, C_TOPIC, bson.M{"id": topic.ID}, topic); err != nil {
 		return err
 	}
-	topic.Content = string(blackfriday.MarkdownCommon([]byte(topic.Content)))
-	m.DoPrewview(topic)
+	m.DoTopicUpdate(topic)
 	return nil
 }
 

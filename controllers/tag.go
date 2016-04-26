@@ -6,7 +6,6 @@ import (
 
 	"github.com/deepzz0/goblog/models"
 	// "github.com/deepzz0/go-common/log"
-	"github.com/deepzz0/goblog/helper"
 )
 
 type TagController struct {
@@ -53,19 +52,7 @@ func (this *TagController) ListTopic() {
 				this.Data["ClassNewer"] = ""
 				this.Data["UrlNewer"] = this.domain + "/tag/" + tagName + fmt.Sprintf("/p/%d", page+1)
 			}
-			var ts []*listOfTopic
-			for _, topic := range topics {
-				t := &listOfTopic{}
-				t.ID = topic.ID
-				t.Time = topic.CreateTime.Format(helper.Layout_y_m_d2)
-				t.URL = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
-				t.Title = topic.Title
-				t.Preview = topic.Preview
-				t.PCategory = topic.PCategory
-				t.PTags = topic.PTags
-				ts = append(ts, t)
-			}
-			this.Data["ListTopics"] = ts
+			this.Data["ListTopics"] = topics
 		}
 	}
 	this.Data["Title"] = tagName + " - " + models.Blogger.BlogName

@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
 	"github.com/deepzz0/goblog/controllers"
 	"github.com/deepzz0/goblog/controllers/background"
+	"github.com/deepzz0/goblog/controllers/feed"
 )
 
 func init() {
@@ -43,14 +43,9 @@ func init() {
 	beego.Router("/admin/syslog", &background.SyslogController{})
 	beego.Router("/admin/trash", &background.TrashController{})
 	// rss
-	beego.Get("/feed", Feed)
+	beego.Get("/feed", feed.Feed)
 	// 404
 	beego.ErrorHandler("404", HTTPNotFound)
-}
-
-// rss
-func Feed(ctx *context.Context) {
-	http.ServeFile(ctx.ResponseWriter, ctx.Request, "./static/feed.xml")
 }
 
 // 404

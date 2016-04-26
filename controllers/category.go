@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	// "github.com/deepzz0/go-common/log"
-	"github.com/deepzz0/goblog/helper"
 	"github.com/deepzz0/goblog/models"
 )
 
@@ -29,6 +28,7 @@ func (this *CategoryController) ListTopic() {
 	}
 	this.Data["Name"] = name
 	this.Data["URL"] = fmt.Sprintf("%s/cat/%s", this.domain, category.ID)
+	this.Data["Domain"] = this.domain
 	pageStr := this.Ctx.Input.Param(":page")
 	page := 1
 	if temp, err := strconv.Atoi(pageStr); err == nil {
@@ -55,19 +55,7 @@ func (this *CategoryController) ListTopic() {
 			this.Data["ClassNewer"] = ""
 			this.Data["UrlNewer"] = this.domain + "/cat/" + cat + fmt.Sprintf("/p/%d", page+1)
 		}
-		var ts []*listOfTopic
-		for _, topic := range topics {
-			t := &listOfTopic{}
-			t.ID = topic.ID
-			t.Time = topic.CreateTime.Format(helper.Layout_y_m_d2)
-			t.URL = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
-			t.Title = topic.Title
-			t.Preview = topic.Preview
-			t.PCategory = topic.PCategory
-			t.PTags = topic.PTags
-			ts = append(ts, t)
-		}
-		this.Data["ListTopics"] = ts
+		this.Data["ListTopics"] = topics
 	}
 	this.Data["Title"] = name + " - " + models.Blogger.BlogName
 }

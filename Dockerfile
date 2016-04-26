@@ -1,9 +1,9 @@
 FROM ubuntu:trusty
-MAINTAINER chenqijing2 <chenqijing2@163.com>
+MAINTAINER deepzz <deepzz.qi@gmail.com>
 
 RUN apt-get update
 RUN apt-get install -y ca-certificates
-
+ENV MGO 172.17.42.1
 ADD views /goblog/views
 ADD conf /goblog/conf
 ADD static /goblog/static

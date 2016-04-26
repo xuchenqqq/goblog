@@ -1,19 +1,19 @@
 <div class="row">
     <div class="col-md-12">
-		<h2 class="page-title page-title"><a href="{{.URL}}" rel="bookmark">{{.Name}}</a></h2>
+		<h2 class="page-title page-title"><a href="{{.Domain}}/{{.URL}}" rel="bookmark">{{.Name}}</a></h2>
 		<div class="topicList">
 			{{range .ListTopics}}
 	        <div class="row">
 	          <div class="col-md-12 post-container">
-	            <h3 class="post-title"><a href="{{.URL}}" rel="bookmark">{{.Title}}</a></h3>
+	            <h3 class="post-title"><a href="{{$.Domain}}/{{.URL}}" rel="bookmark">{{.Title}}</a></h3>
 	            <div class="meta-box">
 	              <span class="m-post-date"><i class="fa fa-calendar"></i> {{.Time}}</span>
-	              <span class="comments-link"><a href="{{.URL}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"><i class="fa fa-comments"></i> 留言</a></span>
+	              <span class="comments-link"><a href="{{$.Domain}}/{{.URL}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"><i class="fa fa-comments"></i> 留言</a></span>
 	            </div>
 	            <div class="post-content post-expect">
 	              <p>
 	                <div class="markdown-body" id="highlight-content">{{str2html .Preview}}</div>
-	                <a href="{{.URL}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
+	                <a href="{{$.Domain}}/{{.URL}}" class="more-link btn btn-primary btn-xs">阅读全文</a>
 	              </p>
 	            </div>
 	            <div class="meta-box">

@@ -1,13 +1,14 @@
 {{if .IsFalse}}
   索引错误.
 {{else}}
+{{with .Topic}}
 <div class="row">
   <div class="col-md-12" role="main">
     <div class="post-container">
-      <h2 class="post-title"><a href="{{.Url}}" rel="bookmark">{{.Title}}</a></h2>
+      <h2 class="post-title"><a href="{{$.Domain}}/{{.URL}}" rel="bookmark">{{.Title}}</a></h2>
       <div class="meta-box">
         <span class="m-post-date"><i class="fa fa-calendar"></i>{{.Time}}</span>
-        <span class="comments-link"><i class="fa fa-comments"></i><a href="{{.Url}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"></a></span>
+        <span class="comments-link"><i class="fa fa-comments"></i><a href="{{$.Domain}}/{{.URL}}#respond" class="ds-thread-count" data-thread-key="{{.ID}}" title="Comment on {{.Title}}" target="_self"></a></span>
       </div>
       <!-- content -->
       <!-- 放入在文章页内容前面 -->
@@ -37,7 +38,7 @@
       </div>
     </div>
     <!-- 多说评论框 start -->
-    <div class="ds-thread" data-order="desc" data-limit="20" data-form-position="top" data-thread-key="{{.ID}}" data-title="{{.Title}}" data-url="{{.Url}}"></div>
+    <div class="ds-thread" data-order="desc" data-limit="20" data-form-position="top" data-thread-key="{{.ID}}" data-title="{{.Title}}" data-url="{{$.Domain}}/{{.URL}}"></div>
     <!-- 多说评论框 end -->
     <!-- 多说公共JS代码 start (一个网页只需插入一次) -->
     <script type="text/javascript">
@@ -53,4 +54,5 @@
     <!-- 多说公共JS代码 end -->
   </div>   
 </div>
+{{end}}
 {{end}}

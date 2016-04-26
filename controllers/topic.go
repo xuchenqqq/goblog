@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/deepzz0/goblog/helper"
@@ -52,11 +51,6 @@ func (this *TopicController) Topic() {
 	}
 	this.Data["IsFalse"] = false
 	this.Data["Title"] = topic.Title + " - " + models.Blogger.BlogName
-	this.Data["Url"] = fmt.Sprintf("%s/%s/%d.html", this.domain, topic.CreateTime.Format(helper.Layout_y_m_d), topic.ID)
-	this.Data["Title"] = topic.Title
-	this.Data["Time"] = topic.CreateTime.Format(helper.Layout_y_m_d2)
-	this.Data["PCategory"] = topic.PCategory
-	this.Data["PTags"] = topic.PTags
-	this.Data["ID"] = fmt.Sprint(topic.ID)
-	this.Data["Content"] = string(topic.Content)
+	this.Data["Topic"] = topic
+	this.Data["Domain"] = this.domain
 }
