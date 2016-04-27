@@ -43,7 +43,7 @@ const (
 
 	templateFile = "./static/feedTemplate.xml"
 	feedFile     = "./static/feed.xml"
-	siteFile     = "./static/feed.xml"
+	siteFile     = "./static/sitemap.xml"
 )
 
 type Topic struct {
