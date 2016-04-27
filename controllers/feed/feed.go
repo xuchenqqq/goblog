@@ -68,7 +68,7 @@ func doFeed() {
 		t := &Topic{}
 		t.Title = v.Title
 		t.URL = fmt.Sprintf("%s/%s/%d.html", domain, v.CreateTime.Format(helper.Layout_y_m_d), v.ID)
-		t.PubDate = v.CreateTime.Format(time.RFC1123)
+		t.PubDate = v.CreateTime.Format(time.RFC1123Z)
 		t.Author = v.Author
 		t.Category = v.CategoryID
 		t.Desc = v.Preview
