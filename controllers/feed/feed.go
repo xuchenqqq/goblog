@@ -79,8 +79,8 @@ func doFeed() {
 	params["Title"] = "Deepzz 的个人博客"
 	params["Domain"] = domain
 	params["Desc"] = "Golang爱好者，专注于游戏服务器开发，轻架构，高并发"
-	params["PubDate"] = time.Now().Format(time.RFC1123)
-	params["BuildDate"] = buildDate.Format(time.RFC1123)
+	params["PubDate"] = time.Now().Format(time.RFC1123Z)
+	params["BuildDate"] = buildDate.Format(time.RFC1123Z)
 	params["Year"] = year
 	params["Version"] = version
 	params["Author"] = "deepzz"

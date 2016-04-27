@@ -21,7 +21,6 @@
   <copyright>{{.Year}} deepzz.com. All rights reserved.</copyright>
   <generator>{{.Domain}}/feed?{{.Version}}</generator>
   <ttl>1440</ttl>
-  <author><name>{{.Author}}</name></author>
   
   {{range .Topics}}
   <item>
@@ -32,7 +31,7 @@
     <dc:creator><![CDATA[{{.Author}}]]></dc:creator>
     <category><![CDATA[{{.Category}}]]></category>
 	  <guid isPermaLink="false">{{.URL}}</guid>
-    <description>{{.Desc}}
+    <description><![CDATA[{{.Desc}}]]>
     </description>
   </item>
   {{end}}
