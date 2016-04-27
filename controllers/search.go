@@ -42,5 +42,5 @@ func (this *SearchController) ListTopic() {
 	this.Data["ListTopics"] = ts
 	this.Data["Title"] = fmt.Sprintf("搜索: %s - %s", search, models.Blogger.BlogName)
 	this.Data["Description"] = fmt.Sprintf("搜索标题,%s,%s,blog", models.Blogger.Introduce, models.Blogger.UserName)
-	this.Data["KeyWords"] = fmt.Sprintf("搜索标题,find,%s,%s", models.Blogger.Introduce, models.Blogger.UserName)
+	this.Data["Keywords"] = fmt.Sprintf("搜索标题,find,%s,%s", models.Blogger.Introduce, models.Blogger.UserName)
 }

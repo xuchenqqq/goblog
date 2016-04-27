@@ -55,6 +55,6 @@ func (this *TopicController) Topic() {
 	this.Data["Title"] = topic.Title + " - " + models.Blogger.BlogName
 	this.Data["Topic"] = topic
 	this.Data["Domain"] = this.domain
-	this.Data["Description"] = fmt.Sprintf("%s,%s,,%s,blog", topic.Title, models.Blogger.Introduce, models.Blogger.UserName)
-	this.Data["KeyWords"] = fmt.Sprintf("%s,%s,%s,%s,%s", topic.Title, topic.CategoryID, strings.Join(topic.TagIDs, ","), models.Blogger.Introduce, models.Blogger.UserName)
+	this.Data["Description"] = fmt.Sprintf("%s,%s,%s,blog", topic.Title, models.Blogger.Introduce, models.Blogger.UserName)
+	this.Data["Keywords"] = fmt.Sprintf("%s,%s,%s,%s,%s", topic.Title, topic.CategoryID, strings.Join(topic.TagIDs, ","), models.Blogger.Introduce, models.Blogger.UserName)
 }

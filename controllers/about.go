@@ -27,5 +27,5 @@ func (this *AboutController) Content() {
 		this.Data["Content"] = "博主真懒。"
 	}
 	this.Data["Description"] = fmt.Sprintf("关于博主,%s,%s,blog", models.Blogger.Introduce, models.Blogger.UserName)
-	this.Data["KeyWords"] = fmt.Sprintf("关于博主,aboutme,%s,%s", models.Blogger.Introduce, models.Blogger.UserName)
+	this.Data["Keywords"] = fmt.Sprintf("关于博主,aboutme,%s,%s", models.Blogger.Introduce, models.Blogger.UserName)
 }
