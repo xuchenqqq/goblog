@@ -56,4 +56,6 @@ func (this *TagController) ListTopic() {
 		}
 	}
 	this.Data["Title"] = tagName + " - " + models.Blogger.BlogName
+	this.Data["Description"] = fmt.Sprintf("标签,%s,%s,blog", models.Blogger.Introduce, models.Blogger.UserName)
+	this.Data["KeyWords"] = fmt.Sprintf("标签,tag,%s,%s", models.Blogger.Introduce, models.Blogger.UserName)
 }

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"fmt"
+
 	"github.com/deepzz0/goblog/models"
 )
 
@@ -14,7 +16,6 @@ func (this *AboutController) Get() {
 	this.Data["Title"] = "关于博主 - " + models.Blogger.BlogName
 	this.Leftbar("about")
 	this.Content()
-
 }
 
 func (this *AboutController) Content() {
@@ -25,4 +26,6 @@ func (this *AboutController) Content() {
 	} else {
 		this.Data["Content"] = "博主真懒。"
 	}
+	this.Data["Description"] = fmt.Sprintf("关于博主,%s,%s,blog", models.Blogger.Introduce, models.Blogger.UserName)
+	this.Data["KeyWords"] = fmt.Sprintf("关于博主,aboutme,%s,%s", models.Blogger.Introduce, models.Blogger.UserName)
 }
