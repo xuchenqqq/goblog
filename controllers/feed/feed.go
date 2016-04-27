@@ -23,6 +23,10 @@ func Feed(ctx *context.Context) {
 	http.ServeFile(ctx.ResponseWriter, ctx.Request, feedFile)
 }
 
+func SiteMap(ctx *context.Context) {
+	http.ServeFile(ctx.ResponseWriter, ctx.Request, siteFile)
+}
+
 func scheduler() {
 	t := time.NewTicker(time.Hour)
 	for {
@@ -39,6 +43,7 @@ const (
 
 	templateFile = "./static/feedTemplate.xml"
 	feedFile     = "./static/feed.xml"
+	siteFile     = "./static/feed.xml"
 )
 
 type Topic struct {

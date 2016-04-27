@@ -44,6 +44,7 @@ func init() {
 	beego.Router("/admin/trash", &background.TrashController{})
 	// rss
 	beego.Get("/feed", feed.Feed)
+	beego.Get("/site", feed.SiteMap)
 	// 404
 	beego.ErrorHandler("404", HTTPNotFound)
 }
