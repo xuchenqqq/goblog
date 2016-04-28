@@ -1,0 +1,63 @@
+User-agent: Baiduspider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Googlebot
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: MSNBot
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Baiduspider-image
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: YoudaoBot
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sogou web spider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sogou inst spider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sogou spider2
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sogou blog
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sogou News Spider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sogou Orion spider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: ChinasoSpider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: Sosospider
+Disallow: /login
+Disallow: /admin/*
+
+
+User-agent: yisouspider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: EasouSpider
+Disallow: /login
+Disallow: /admin/*
+
+User-agent: *
+Disallow: /
