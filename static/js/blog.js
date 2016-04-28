@@ -129,7 +129,7 @@ $(".anchor-link").click(function(){
         }else if ((document.body) && (document.body.clientWidth)){
             winWidth = document.body.clientWidth;
         }
-        if(winWidth<=768){
+        if(winWidth<768){
             $('#home-content').addClass('col-md-12 col-xs-12').removeClass('col-md-9 col-xs-10');
             $('#home-right').css('display', 'none');
             $('.right-content').css('width', '100%');
